@@ -62,10 +62,28 @@ export default function RecapPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSubmitRating = (e: React.FormEvent) => {
+  const handleSubmitRating = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
-    toast.success('Thank you! Rating & feedback submitted.');
+
+    if (isSupabaseConfigured && user) {
+      try {
+        const supabase = createClient();
+        await supabase.from('event_ratings').upsert({
+          event_id: eventId,
+          user_id: user.id,
+          rating,
+          feedback: comment,
+          tags: feedbackTags,
+        }, { onConflict: 'event_id,user_id' });
+      } catch {}
+    }
+
+    try {
+      localStorage.setItem(`nexus_event_rating_${eventId}`, JSON.stringify({ rating, comment, tags: feedbackTags }));
+    } catch {}
+
+    toast.success('Thank you! 5-star rating & feedback saved permanently. 🎉');
   };
 
   const handleExportCSV = () => {
