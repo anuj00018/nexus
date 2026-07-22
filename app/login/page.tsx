@@ -1,12 +1,12 @@
 'use client';
 
 // ===================================================================
-// Login Page — Official LinkedIn Redirect Sign-In
-// Redirects directly to LinkedIn official authorization / Chrome login page
+// Login Page — Single Option Official LinkedIn Sign-In
+// Displays strictly 1 button: Sign In on LinkedIn Official Page ↗
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowRight, Lock, Mail, User, Linkedin, Check, Sparkles, ShieldCheck, ExternalLink } from 'lucide-react';
+import { ArrowRight, Lock, Mail, User, Linkedin, Check, Sparkles, ShieldCheck } from 'lucide-react';
 import { NexusIcon } from '@/components/ui/Logo';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
@@ -23,20 +23,13 @@ function LinkedInIcon({ className }: { className?: string }) {
 
 function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
-  const [showProfileForm, setShowProfileForm] = useState(false);
-
-  // User Attendee details
-  const [fullName, setFullName] = useState('');
-  const [linkedinUrl, setLinkedinUrl] = useState('');
-  const [skillsInput, setSkillsInput] = useState('Networking, Tech');
-  const [selectedSkills, setSelectedSkills] = useState<string[]>(['Networking', 'Tech']);
 
   const searchParams = useSearchParams();
   const router = useRouter();
   const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
   const setUser = useAuthStore((s) => s.setUser);
 
-  // Redirect directly to Chrome / LinkedIn Official Login Page
+  // Single Option: Redirect directly to Official LinkedIn Login
   const handleOfficialLinkedInRedirect = async () => {
     setIsLoading(true);
     toast.success('Redirecting to LinkedIn official login page...');
@@ -60,54 +53,13 @@ function LoginContent() {
     }, 500);
   };
 
-  // Complete Entry after LinkedIn authentication
-  const handleCompleteEntry = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const trimmedName = fullName.trim();
-    if (!trimmedName) {
-      toast.error('Please enter your Full Name');
-      return;
-    }
-
-    setIsLoading(true);
-
-    const formattedLinkedin = linkedinUrl.trim().startsWith('http')
-      ? linkedinUrl.trim()
-      : linkedinUrl.trim()
-      ? `https://${linkedinUrl.trim()}`
-      : `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(trimmedName)}`;
-
-    const parsedSkills = skillsInput
-      ? skillsInput.split(',').map((s) => s.trim()).filter(Boolean)
-      : ['Networking', 'Tech'];
-
-    const newUser = {
-      id: `user-linkedin-${Date.now()}`,
-      email: `${trimmedName.toLowerCase().replace(/\s+/g, '.')}@nexus.app`,
-      name: trimmedName,
-      avatar_url: null,
-      headline: 'LinkedIn Verified Attendee',
-      linkedin_url: formattedLinkedin,
-      skills: parsedSkills,
-      role: 'attendee' as const,
-    };
-
-    setUser(newUser as any);
-    toast.success(`Welcome to Nexus, ${trimmedName}!`);
-
-    setTimeout(() => {
-      router.push(redirectTo);
-    }, 400);
-  };
-
   return (
     <div className="min-h-screen bg-background flex flex-col justify-between px-5 py-8">
       <div className="w-full max-w-sm mx-auto my-auto space-y-6">
 
         {/* Logo Header */}
         <div className="flex flex-col items-center text-center">
-          <NexusIcon size={60} className="mb-2" />
+          <NexusIcon size={64} className="mb-3" />
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Nexus</h1>
           <span className="text-2xs font-extrabold tracking-widest uppercase text-nexus-indigo mt-0.5">
             Meet.Connect.Grow
@@ -117,7 +69,7 @@ function LoginContent() {
           </p>
         </div>
 
-        {/* ── Primary Main Button: Open Official LinkedIn Login Page ── */}
+        {/* ── Single Primary Option: Open Official LinkedIn Login Page ── */}
         <div className="space-y-3">
           <button
             type="button"
@@ -141,118 +93,6 @@ function LoginContent() {
             )}
           </button>
         </div>
-
-        {/* Divider */}
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground">Or Enter Room Profile</span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
-        {/* ── Confirm Room Profile Form ───────────────────────────── */}
-        {!showProfileForm ? (
-          <button
-            type="button"
-            onClick={() => setShowProfileForm(true)}
-            className="w-full h-11 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-semibold text-xs flex items-center justify-center gap-2 border border-border transition-colors"
-          >
-            <User className="h-4 w-4 text-nexus-indigo" />
-            Set Your Room Display Profile & Skills
-          </button>
-        ) : (
-          <form onSubmit={handleCompleteEntry} className="p-5 rounded-2xl bg-muted/40 border border-border space-y-4 shadow-xl">
-            <div className="flex items-center justify-between border-b border-border pb-2">
-              <h3 className="text-xs font-bold text-foreground">Room Display Profile</h3>
-              <button
-                type="button"
-                onClick={() => setShowProfileForm(false)}
-                className="text-2xs text-muted-foreground hover:text-foreground"
-              >
-                Close
-              </button>
-            </div>
-
-            {/* Full Name */}
-            <div>
-              <label className="block text-2xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
-                <User className="h-3.5 w-3.5 text-muted-foreground" />
-                Full Name <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Anuj Vardham"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0A66C2]"
-              />
-            </div>
-
-            {/* LinkedIn Profile Link */}
-            <div>
-              <label className="block text-2xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
-                <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" />
-                Your LinkedIn Profile URL
-              </label>
-              <input
-                type="text"
-                placeholder="https://www.linkedin.com/in/your-profile"
-                value={linkedinUrl}
-                onChange={(e) => setLinkedinUrl(e.target.value)}
-                className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0A66C2]"
-              />
-            </div>
-
-            {/* Custom Skills & Expertise */}
-            <div>
-              <label className="block text-2xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-nexus-indigo" />
-                Skills & Expertise
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. AI / ML, Product Strategy, React"
-                value={skillsInput}
-                onChange={(e) => setSkillsInput(e.target.value)}
-                className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0A66C2] mb-2"
-              />
-              <div className="flex flex-wrap gap-1.5">
-                {['AI / ML', 'Product Strategy', 'Software Eng', 'UI/UX Design', 'Marketing', 'Founder', 'Investing'].map((chip) => {
-                  const isSelected = selectedSkills.includes(chip);
-                  return (
-                    <button
-                      key={chip}
-                      type="button"
-                      onClick={() => {
-                        const next = isSelected
-                          ? selectedSkills.filter((s) => s !== chip)
-                          : [...selectedSkills, chip];
-                        setSelectedSkills(next);
-                        setSkillsInput(next.join(', '));
-                      }}
-                      className={cn(
-                        'text-2xs px-2 py-0.5 rounded-lg border font-semibold transition-all',
-                        isSelected
-                          ? 'bg-nexus-indigo text-white border-nexus-indigo'
-                          : 'bg-background text-muted-foreground border-border hover:border-foreground/30'
-                      )}
-                    >
-                      {chip}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading || !fullName.trim()}
-              className="w-full h-11 rounded-xl bg-nexus-indigo text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-nexus-indigo/90 active:scale-[0.98] disabled:opacity-50 transition-all shadow-md mt-3"
-            >
-              Enter Event Room <ArrowRight className="h-4 w-4" />
-            </button>
-          </form>
-        )}
 
       </div>
 
