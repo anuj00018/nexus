@@ -1,9 +1,9 @@
 'use client';
 
 // ===================================================================
-// Login Page — Seamless In-App LinkedIn Sign-In
-// Instantly authenticates session & proceeds directly to /onboarding
-// Prevents leaving to external LinkedIn app or tab
+// Login Page — 100% In-App Sign-In Redirect
+// Guarantees immediate in-app navigation to /onboarding
+// Completely avoids launching external LinkedIn app or tabs
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -28,8 +28,10 @@ function LoginContent() {
   const redirectTo = searchParams.get('redirectTo') ?? '/onboarding';
   const setUser = useAuthStore((s) => s.setUser);
 
-  // Seamless Sign-In: Authenticate & proceed directly to /onboarding in-app
-  const handleOfficialLinkedInRedirect = () => {
+  // Direct In-App Navigation to /onboarding (0 External App Switch)
+  const handleInAppSignIn = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsLoading(true);
     toast.success('Starting profile setup...');
 
@@ -47,10 +49,8 @@ function LoginContent() {
       role: 'attendee' as const,
     } as any);
 
-    // Direct in-app navigation to post sign-in intent & skills setup page
-    setTimeout(() => {
-      router.push(redirectTo);
-    }, 200);
+    // Guaranteed direct in-app navigation (NO external window/app switch)
+    window.location.href = redirectTo.startsWith('/') ? redirectTo : '/onboarding';
   };
 
   return (
@@ -73,7 +73,7 @@ function LoginContent() {
         <div className="space-y-3">
           <button
             type="button"
-            onClick={handleOfficialLinkedInRedirect}
+            onClick={handleInAppSignIn}
             disabled={isLoading}
             className="w-full h-14 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-3 text-white bg-[#0A66C2] hover:bg-[#084e96] active:scale-[0.98] transition-all shadow-xl shadow-[#0A66C2]/30 border border-white/20"
           >
