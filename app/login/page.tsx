@@ -26,7 +26,7 @@ function LoginContent() {
 
   const searchParams = useSearchParams();
   const router = useRouter();
-  const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
+  const redirectTo = searchParams.get('redirectTo') ?? '/onboarding';
   const setUser = useAuthStore((s) => s.setUser);
 
   // Single Option: Redirect directly to Official LinkedIn Login

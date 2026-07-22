@@ -1,205 +1,220 @@
 'use client';
 
-/**
- * Quick Setup — Single screen, fills in 20 seconds.
- * No multi-step. Everything visible at once.
- * Goal → Interests (chips) → Privacy → Done.
- */
+// ===================================================================
+// Post Sign-In Setup ("Why are you here?" & Skills Selection)
+// Displays immediately after LinkedIn Sign-In
+// ===================================================================
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, Check, Rocket, Briefcase, Users, Lightbulb, Globe, Sparkles, Target } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { NexusIcon } from '@/components/ui/Logo';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
 import { ROUTES } from '@/constants';
 import { cn } from '@/lib/utils';
-import type { AttendeeGoal, AvailabilityStatus, PrivacySetting } from '@/types';
 
-// Streamlined goal list — most common ones
-const GOALS = [
-  { value: 'networking',  label: 'Networking',   emoji: '🤝' },
-  { value: 'hiring',      label: 'Hiring',        emoji: '👔' },
-  { value: 'job_seeking', label: 'Job Hunting',   emoji: '🔍' },
-  { value: 'co_founder',  label: 'Co-founder',    emoji: '🚀' },
-  { value: 'mentoring',   label: 'Mentoring',     emoji: '💡' },
-  { value: 'learning',    label: 'Learning',      emoji: '📚' },
-] as const;
-
-const INTERESTS_QUICK = [
-  { id: 'ai', label: 'AI / ML', emoji: '🤖' },
-  { id: 'web', label: 'Web Dev', emoji: '🌐' },
-  { id: 'design', label: 'Design', emoji: '🎨' },
-  { id: 'startup', label: 'Startups', emoji: '🚀' },
-  { id: 'data', label: 'Data', emoji: '📊' },
-  { id: 'mobile', label: 'Mobile', emoji: '📱' },
-  { id: 'crypto', label: 'Web3', emoji: '⛓️' },
-  { id: 'product', label: 'Product', emoji: '📋' },
-  { id: 'cloud', label: 'Cloud', emoji: '☁️' },
-  { id: 'security', label: 'Security', emoji: '🔐' },
-  { id: 'climate', label: 'Climate', emoji: '🌱' },
-  { id: 'impact', label: 'Impact', emoji: '🌍' },
+const WHY_HERE_OPTIONS = [
+  {
+    id: 'hackathon',
+    title: 'Hackathon & Teammates 🚀',
+    desc: 'Looking for developers, designers, or hackers to build projects',
+    icon: Rocket,
+    color: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
+  },
+  {
+    id: 'jobs',
+    title: 'Job / Internship Search 💼',
+    desc: 'Open to software engineering, tech, product, or design roles',
+    icon: Briefcase,
+    color: 'bg-nexus-indigo/10 text-nexus-indigo border-nexus-indigo/20',
+  },
+  {
+    id: 'cofounder',
+    title: 'Co-Founder & Startup 🤝',
+    desc: 'Building a startup, looking for co-founders or tech partners',
+    icon: Users,
+    color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+  },
+  {
+    id: 'investing',
+    title: 'Investing & Mentorship 💡',
+    desc: 'Looking to invest, mentor, or advise tech talent',
+    icon: Lightbulb,
+    color: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+  },
+  {
+    id: 'networking',
+    title: 'Tech Networking 🌐',
+    desc: 'General networking with developers, founders, and creators',
+    icon: Globe,
+    color: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+  },
 ];
 
-const PRIVACY_OPTS = [
-  { value: 'everyone',            label: 'Everyone',  emoji: '🌍', desc: 'All attendees see you' },
-  { value: 'matching_interests',  label: 'Matching',  emoji: '🎯', desc: 'Shown first to matches' },
-  { value: 'invisible',           label: 'Ghost',     emoji: '👻', desc: 'You can browse only' },
-] as const;
+const SKILL_TAGS = [
+  'React', 'AI / ML', 'Python', 'Node.js', 'UI/UX Design',
+  'Product Strategy', 'Cloud & DevOps', 'Mobile Apps', 'Marketing', 'Sales'
+];
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { setOnboarded } = useAuthStore();
-  const [goals, setGoals] = useState<string[]>(['networking']);
-  const [interests, setInterests] = useState<string[]>([]);
-  const [privacy, setPrivacy] = useState<PrivacySetting>('everyone');
+  const { user, setUser, setOnboarded } = useAuthStore();
+  const [selectedIntent, setSelectedIntent] = useState<string>('hackathon');
+  const [selectedSkills, setSelectedSkills] = useState<string[]>(['AI / ML', 'React']);
+  const [customSkillInput, setCustomSkillInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const toggleGoal = (v: string) => {
-    setGoals(g => g.includes(v) ? g.filter(x => x !== v) : g.length < 3 ? [...g, v] : g);
-  };
-  const toggleInterest = (v: string) => {
-    setInterests(i => i.includes(v) ? i.filter(x => x !== v) : i.length < 5 ? [...i, v] : i);
-  };
-
-  const handleDone = async () => {
-    if (goals.length === 0) { toast.error('Pick at least one goal'); return; }
-    setIsLoading(true);
-    try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push(ROUTES.LOGIN); return; }
-
-      await supabase.from('user_preferences').upsert({
-        user_id: user.id,
-        goals,
-        privacy,
-        availability: 'available',
-        contact_preference: 'open',
-        onboarding_done: true,
-      });
-
-      setOnboarded(true);
-      toast.success('All set! 🎉');
-      router.push(ROUTES.JOIN_EVENT);  // Go directly to Join Event
-    } catch {
-      toast.error('Error saving. Try again.');
-    } finally {
-      setIsLoading(false);
+  const toggleSkill = (skill: string) => {
+    if (selectedSkills.includes(skill)) {
+      setSelectedSkills(selectedSkills.filter((s) => s !== skill));
+    } else {
+      setSelectedSkills([...selectedSkills, skill]);
     }
   };
 
+  const handleAddCustomSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && customSkillInput.trim()) {
+      e.preventDefault();
+      const val = customSkillInput.trim();
+      if (!selectedSkills.includes(val)) {
+        setSelectedSkills([...selectedSkills, val]);
+      }
+      setCustomSkillInput('');
+    }
+  };
+
+  const handleDone = async () => {
+    setIsLoading(true);
+    const chosenObj = WHY_HERE_OPTIONS.find((i) => i.id === selectedIntent);
+    const intentTitle = chosenObj ? chosenObj.title : 'Tech Networking 🌐';
+
+    if (user) {
+      setUser({
+        ...user,
+        headline: intentTitle,
+        skills: selectedSkills,
+      } as any);
+    }
+
+    try {
+      const supabase = createClient();
+      const { data: { user: sbUser } } = await supabase.auth.getUser();
+      if (sbUser) {
+        await supabase.from('user_preferences').upsert({
+          user_id: sbUser.id,
+          goals: [intentTitle],
+          availability: 'available',
+          onboarding_done: true,
+        });
+      }
+    } catch {}
+
+    setOnboarded(true);
+    toast.success('🎉 Profile setup complete!');
+    router.push(ROUTES.JOIN_EVENT);
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-md mx-auto px-5 py-8 pb-24">
+    <div className="min-h-screen bg-background flex flex-col justify-between p-5 py-8">
+      <div className="max-w-md mx-auto w-full my-auto space-y-6">
 
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <NexusIcon size={36} />
+        <div className="flex items-center gap-3">
+          <NexusIcon size={44} />
           <div>
-            <h1 className="text-lg font-bold text-foreground leading-none">Quick setup</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Takes under 20 seconds</p>
+            <span className="text-2xs font-extrabold tracking-widest uppercase text-nexus-indigo">
+              Post Sign-In Profile Setup
+            </span>
+            <h1 className="text-xl font-extrabold text-foreground leading-tight">What brings you here today?</h1>
           </div>
         </div>
 
-        {/* ── Goals ─────────────────────────────────────────────── */}
-        <div className="mb-6">
-          <p className="text-sm font-semibold text-foreground mb-3">
-            Why are you here? <span className="text-muted-foreground font-normal">(pick up to 3)</span>
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {GOALS.map(g => {
-              const on = goals.includes(g.value);
-              const disabled = !on && goals.length >= 3;
+        {/* ── 1. Select Why You Are Here ───────────────────────────── */}
+        <div className="space-y-3">
+          <label className="block text-2xs font-extrabold tracking-wider uppercase text-nexus-indigo">
+            1. Why are you attending this event?
+          </label>
+          <div className="space-y-2">
+            {WHY_HERE_OPTIONS.map((opt) => {
+              const isSelected = selectedIntent === opt.id;
+              const Icon = opt.icon;
               return (
-                <button key={g.value} type="button" onClick={() => toggleGoal(g.value)}
-                  disabled={disabled}
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setSelectedIntent(opt.id)}
                   className={cn(
-                    'flex items-center gap-1.5 px-3 py-2 rounded-full border text-sm font-medium',
-                    'transition-all duration-100 active:scale-95',
-                    on ? 'bg-nexus-indigo border-nexus-indigo text-white'
-                       : 'bg-background border-border text-foreground hover:border-foreground/40',
-                    disabled && 'opacity-30 cursor-not-allowed'
-                  )}>
-                  <span>{g.emoji}</span>{g.label}
-                  {on && <Check className="h-3 w-3 ml-0.5" />}
+                    'w-full text-left p-3.5 rounded-2xl border transition-all flex items-start justify-between gap-3',
+                    isSelected
+                      ? 'bg-nexus-indigo/10 border-nexus-indigo shadow-sm'
+                      : 'bg-background border-border hover:border-foreground/30'
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={cn('p-2 rounded-xl border shrink-0', opt.color)}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-xs text-foreground leading-tight">{opt.title}</p>
+                      <p className="text-2xs text-muted-foreground mt-0.5">{opt.desc}</p>
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <div className="p-1 rounded-full bg-nexus-indigo text-white shrink-0 mt-0.5">
+                      <Check className="h-3 w-3" />
+                    </div>
+                  )}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="h-px bg-border mb-6" />
-
-        {/* ── Interests ─────────────────────────────────────────── */}
-        <div className="mb-6">
-          <p className="text-sm font-semibold text-foreground mb-3">
-            Your interests <span className="text-muted-foreground font-normal">(up to 5)</span>
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {INTERESTS_QUICK.map(i => {
-              const on = interests.includes(i.id);
-              const disabled = !on && interests.length >= 5;
+        {/* ── 2. Select Skills & Expertise ──────────────────────────── */}
+        <div className="space-y-2">
+          <label className="block text-2xs font-extrabold tracking-wider uppercase text-nexus-indigo flex items-center justify-between">
+            <span>2. Select Your Top Skills</span>
+            <span className="text-muted-foreground font-normal">Press Enter to add custom</span>
+          </label>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {SKILL_TAGS.map((tag) => {
+              const isSelected = selectedSkills.includes(tag);
               return (
-                <button key={i.id} type="button" onClick={() => toggleInterest(i.id)}
-                  disabled={disabled}
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleSkill(tag)}
                   className={cn(
-                    'flex items-center gap-1.5 px-3 py-2 rounded-full border text-sm font-medium',
-                    'transition-all duration-100 active:scale-95',
-                    on ? 'bg-nexus-indigo/10 border-nexus-indigo text-nexus-indigo'
-                       : 'bg-background border-border text-foreground hover:border-foreground/40',
-                    disabled && 'opacity-30 cursor-not-allowed'
-                  )}>
-                  <span>{i.emoji}</span>{i.label}
+                    'text-xs px-3 py-1.5 rounded-xl border font-semibold transition-all',
+                    isSelected
+                      ? 'bg-nexus-indigo text-white border-nexus-indigo'
+                      : 'bg-muted/60 text-muted-foreground border-border hover:text-foreground'
+                  )}
+                >
+                  {tag} {isSelected && '✓'}
                 </button>
               );
             })}
           </div>
+
+          <input
+            type="text"
+            placeholder="Type a custom skill & press Enter..."
+            value={customSkillInput}
+            onChange={(e) => setCustomSkillInput(e.target.value)}
+            onKeyDown={handleAddCustomSkill}
+            className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-nexus-indigo"
+          />
         </div>
 
-        {/* Divider */}
-        <div className="h-px bg-border mb-6" />
-
-        {/* ── Privacy ───────────────────────────────────────────── */}
-        <div className="mb-8">
-          <p className="text-sm font-semibold text-foreground mb-3">Who can see you?</p>
-          <div className="flex gap-2">
-            {PRIVACY_OPTS.map(p => (
-              <button key={p.value} type="button" onClick={() => setPrivacy(p.value as PrivacySetting)}
-                className={cn(
-                  'flex-1 flex flex-col items-center gap-1 py-3 rounded-xl border-2 text-center',
-                  'transition-all duration-100 active:scale-95',
-                  privacy === p.value
-                    ? 'border-nexus-indigo bg-nexus-indigo/5'
-                    : 'border-border hover:border-foreground/20'
-                )}>
-                <span className="text-xl">{p.emoji}</span>
-                <span className="text-xs font-semibold text-foreground">{p.label}</span>
-                <span className="text-2xs text-muted-foreground">{p.desc}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Done Button ───────────────────────────────────────── */}
+        {/* Action Button */}
         <button
           onClick={handleDone}
-          disabled={isLoading || goals.length === 0}
-          className="w-full h-14 rounded-xl bg-nexus-black text-white font-semibold text-base
-                     flex items-center justify-center gap-2
-                     hover:bg-nexus-black/90 active:scale-[0.98]
-                     disabled:opacity-50 disabled:cursor-not-allowed
-                     transition-all duration-150 shadow-lg"
+          disabled={isLoading}
+          className="w-full h-13 rounded-2xl bg-nexus-indigo text-white font-extrabold text-sm flex items-center justify-center gap-2 hover:bg-nexus-indigo/90 active:scale-[0.98] transition-all shadow-lg shadow-nexus-indigo/20 mt-4"
         >
-          {isLoading ? (
-            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-            </svg>
-          ) : (
-            <>Find people at my event <ArrowRight className="h-5 w-5" /></>
-          )}
+          {isLoading ? 'Saving setup...' : <>Complete Setup & Enter Room <ArrowRight className="h-4 w-4" /></>}
         </button>
 
       </div>
