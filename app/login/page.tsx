@@ -159,7 +159,7 @@ function LoginContent() {
           {/* Sign In Button */}
           <button
             type="submit"
-            disabled={isLoading || !linkedinId.trim() || !linkedinPassword.trim()}
+            disabled={isLoading}
             className="w-full h-12 rounded-xl bg-[#0A66C2] text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#084e96] active:scale-[0.98] disabled:opacity-50 transition-all shadow-md shadow-[#0A66C2]/20 mt-3"
           >
             {isLoading ? (
@@ -178,6 +178,29 @@ function LoginContent() {
             )}
           </button>
         </form>
+
+        {/* Instant 1-Tap Entrance for any device (0 Password, 0 OTP) */}
+        <button
+          type="button"
+          onClick={() => {
+            const guestName = `Attendee #${Math.floor(1000 + Math.random() * 9000)}`;
+            setUser({
+              id: `user-${Date.now()}`,
+              email: `attendee@nexus.app`,
+              name: guestName,
+              avatar_url: null,
+              headline: 'Event Attendee',
+              linkedin_url: 'https://www.linkedin.com',
+              skills: ['Networking'],
+              role: 'attendee' as const,
+            });
+            toast.success(`Welcome! Instant entrance granted as ${guestName}`);
+            router.push(redirectTo);
+          }}
+          className="w-full h-11 rounded-xl bg-nexus-indigo text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-nexus-indigo/90 active:scale-[0.98] transition-all shadow-md"
+        >
+          ⚡ Instant 1-Tap Entrance (No Password & No OTP Needed)
+        </button>
 
         {/* Guest Demo fast entry */}
         <div className="text-center">
