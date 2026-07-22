@@ -1,131 +1,81 @@
 'use client';
 
 // ===================================================================
-// Nearby People Page — Dynamic Real Attendees
-// Shows ONLY real attendees who join the event room in real time.
-// Each attendee card has a prominent blue "LinkedIn Profile ↗" button.
+// Nearby People Page — Global Real-Time Cross-Device Attendee Sync
+// Syncs attendees live across all phones & laptops!
+// Each attendee card displays their typed LinkedIn link & direct profile button.
 // ===================================================================
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Linkedin, RefreshCw, Users, MapPin, Wifi, WifiOff,
-  Star, Zap, Filter, MessageSquare, UserPlus
+  Star, Zap, Filter, MessageSquare, ExternalLink
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { EventHeaderNav } from '@/components/events/EventHeaderNav';
 import { DirectChatDrawer } from '@/components/messages/DirectChatDrawer';
-import { LiveMatchNotifier } from '@/components/notifications/LiveMatchNotifier';
 import { Avatar } from '@/components/ui/Avatar';
-import { Badge } from '@/components/ui/Badge';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
-
-const STATUS_CONFIG = {
-  available:    { dot: 'bg-emerald-500', label: 'Available',    ring: 'ring-emerald-500/20' },
-  busy:         { dot: 'bg-red-500',     label: 'Busy',         ring: 'ring-red-500/20'     },
-  coffee_break: { dot: 'bg-amber-500',   label: 'Coffee Break', ring: 'ring-amber-500/20'   },
-};
 
 type FilterType = 'all' | 'matches' | 'available';
 
 export default function NearbyPage() {
   const params = useParams();
-  const eventId = (params?.id as string) || 'demo-1';
+  const rawId = (params?.id as string) || 'demo-1';
+  const eventId = rawId.toLowerCase();
   const router = useRouter();
 
   const { user } = useAuthStore();
   const [people, setPeople] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-
   const [filter, setFilter] = useState<FilterType>('all');
-  const [eventTitle, setEventTitle] = useState('Nexus Event Room');
   const [activeChatRecipient, setActiveChatRecipient] = useState<any | null>(null);
-  const [formattedTime, setFormattedTime] = useState<string>('');
   const [renderedLimit, setRenderedLimit] = useState<number>(50);
 
-  // Load active room participants (Dynamic & Real)
-  const loadRoomParticipants = useCallback(async () => {
+  // Announce user presence & fetch all live room participants across all devices
+  const syncRoomParticipants = useCallback(async () => {
     setIsLoading(true);
-    let roomList: any[] = [];
 
-    // 1. If Supabase is connected, load real participants from database
-    if (isSupabaseConfigured && user) {
-      try {
-        const supabase = createClient();
-        const { data: participants } = await supabase
-          .from('event_participants')
-          .select('user_id, users(id, name, headline, avatar_url, linkedin_url, skills)')
-          .eq('event_id', eventId);
-
-        if (participants && participants.length > 0) {
-          roomList = participants.map((p: any) => ({
-            id: p.users.id,
-            name: p.users.name,
-            headline: p.users.headline,
-            avatar_url: p.users.avatar_url,
-            linkedin_url: p.users.linkedin_url,
-            skills: p.users.skills || ['Networking', 'Tech'],
-            availability: 'available',
-            distance_m: Math.floor(Math.random() * 50) + 5,
-            interest_overlap: 2,
-          }));
-        }
-      } catch (err) {
-        console.error('Database fetch error:', err);
-      }
-    }
-
-    // 2. Load locally joined room participants (from active sessions)
-    try {
-      const localKey = `nexus_room_participants_${eventId}`;
-      const saved = localStorage.getItem(localKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        parsed.forEach((item: any) => {
-          if (!roomList.some((r) => r.id === item.id || r.name === item.name)) {
-            roomList.push(item);
-          }
-        });
-      }
-    } catch {}
-
-    // 3. Ensure current signed-in user is in room list
     const activeUser = user || {
-      id: 'user-founder-anuj',
-      name: 'Anuj Vardham',
-      headline: 'Founder @ Nexus',
-      linkedin_url: 'https://www.linkedin.com/in/anuj-vardham-b399253a1',
-      skills: ['AI / ML', 'Product Strategy', 'Startup Growth'],
+      id: `user-guest-${Date.now()}`,
+      name: 'Guest Attendee',
+      headline: 'Event Attendee',
+      linkedin_url: 'https://www.linkedin.com',
+      skills: ['Networking'],
     };
 
-    if (!roomList.some((p) => p.id === activeUser.id || p.name === activeUser.name)) {
-      roomList.unshift({
-        id: activeUser.id,
-        name: activeUser.name,
-        headline: activeUser.headline || 'Event Attendee',
-        avatar_url: activeUser.avatar_url,
-        linkedin_url: activeUser.linkedin_url || 'https://www.linkedin.com/in/anuj-vardham-b399253a1',
-        skills: activeUser.skills || ['Networking'],
-        availability: 'available',
-        distance_m: 0,
-        interest_overlap: 3,
+    try {
+      // 1. Announce current user to global room API
+      await fetch('/api/room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId, user: activeUser }),
       });
-    }
 
-    setPeople(roomList);
-    setLastUpdated(new Date());
-    setIsLoading(false);
+      // 2. Fetch all participants currently in this room across all devices
+      const res = await fetch(`/api/room?eventId=${eventId}`);
+      const data = await res.json();
+
+      if (data.success && Array.isArray(data.participants)) {
+        setPeople(data.participants);
+      }
+    } catch (err) {
+      console.error('Room sync error:', err);
+    } finally {
+      setLastUpdated(new Date());
+      setIsLoading(false);
+    }
   }, [eventId, user]);
 
+  // Initial sync & auto-refresh every 3 seconds for instant multi-phone updates
   useEffect(() => {
-    loadRoomParticipants();
-  }, [loadRoomParticipants]);
-
-  useEffect(() => {
-    setFormattedTime(lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-  }, [lastUpdated]);
+    syncRoomParticipants();
+    const interval = setInterval(syncRoomParticipants, 3000);
+    return () => clearInterval(interval);
+  }, [syncRoomParticipants]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -134,8 +84,8 @@ export default function NearbyPage() {
     }
   };
 
-  // Open LinkedIn profile URL directly in new tab
-  const handleConnect = (personName: string, linkedinUrl?: string) => {
+  // Open exact typed LinkedIn profile URL in new tab
+  const openLinkedInProfile = (personName: string, linkedinUrl?: string) => {
     let targetUrl = linkedinUrl?.trim();
     if (targetUrl && !targetUrl.startsWith('http')) {
       targetUrl = `https://${targetUrl}`;
@@ -182,11 +132,12 @@ export default function NearbyPage() {
         </div>
 
         <button
-          onClick={loadRoomParticipants}
-          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors shrink-0"
-          title="Refresh attendee room list"
+          onClick={syncRoomParticipants}
+          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors shrink-0 flex items-center gap-1 text-2xs"
+          title="Refresh live room attendees"
         >
           <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
+          Sync
         </button>
       </div>
 
@@ -195,11 +146,11 @@ export default function NearbyPage() {
         {filtered.length === 0 ? (
           <div className="py-20 px-6 text-center space-y-3">
             <div className="p-3 rounded-full bg-nexus-indigo/10 text-nexus-indigo w-14 h-14 mx-auto flex items-center justify-center">
-              <Users className="h-7 w-7" />
+              <Users className="h-7 w-7 animate-pulse" />
             </div>
-            <h3 className="font-bold text-base text-foreground">No other attendees in room yet</h3>
+            <h3 className="font-bold text-base text-foreground">Waiting for people to join...</h3>
             <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-              Share event code <span className="font-mono font-bold text-nexus-indigo uppercase">{eventId}</span> at the entrance for attendees to join live!
+              Share room code <span className="font-mono font-bold text-nexus-indigo uppercase">{eventId}</span> on other phones & laptops to see everyone live!
             </p>
           </div>
         ) : (
@@ -216,11 +167,24 @@ export default function NearbyPage() {
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <h3 className="text-sm font-bold text-foreground">{person.name}</h3>
-                        <span className="text-2xs px-1.5 py-0.5 rounded-full bg-nexus-indigo/10 text-nexus-indigo font-bold">
-                          Live Attendee
+                        <span className="text-2xs px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 font-bold">
+                          Live Now
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">{person.headline || 'Event Participant'}</p>
+
+                      {/* Display typed LinkedIn link under name */}
+                      {person.linkedin_url && (
+                        <a
+                          href={person.linkedin_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-2xs text-[#0A66C2] font-semibold hover:underline flex items-center gap-1 mt-1 truncate max-w-xs"
+                        >
+                          <Linkedin className="h-3 w-3 shrink-0 fill-[#0A66C2]" />
+                          {person.linkedin_url.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, '@')}
+                        </a>
+                      )}
                     </div>
 
                     <span className="text-2xs text-muted-foreground shrink-0 flex items-center gap-0.5">
@@ -240,22 +204,22 @@ export default function NearbyPage() {
                     </div>
                   )}
 
-                  {/* Action Buttons — Prominent LinkedIn & Direct Message */}
+                  {/* Action Buttons — Direct LinkedIn Profile Link */}
                   <div className="mt-3 flex items-center gap-2">
                     <button
-                      onClick={() => handleConnect(person.name, person.linkedin_url)}
-                      className="flex-1 h-9 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 bg-[#0A66C2] hover:bg-[#084e96] text-white active:scale-[0.97] transition-all shadow-xs shadow-[#0A66C2]/20 shrink-0"
+                      onClick={() => openLinkedInProfile(person.name, person.linkedin_url)}
+                      className="flex-1 h-9.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 bg-[#0A66C2] hover:bg-[#084e96] text-white active:scale-[0.97] transition-all shadow-md shadow-[#0A66C2]/20 shrink-0"
                     >
-                      <Linkedin className="h-3.5 w-3.5 fill-white shrink-0" />
-                      LinkedIn Profile ↗
+                      <Linkedin className="h-4 w-4 fill-white shrink-0" />
+                      View LinkedIn Profile ↗
                     </button>
 
                     <button
                       onClick={() => setActiveChatRecipient(person)}
-                      className="flex-1 h-9 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 bg-nexus-indigo/10 hover:bg-nexus-indigo/20 text-nexus-indigo border border-nexus-indigo/30 active:scale-[0.97] transition-all shrink-0"
+                      className="flex-1 h-9.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 bg-nexus-indigo/10 hover:bg-nexus-indigo/20 text-nexus-indigo border border-nexus-indigo/30 active:scale-[0.97] transition-all shrink-0"
                     >
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      Message
+                      <MessageSquare className="h-4 w-4" />
+                      Chat
                     </button>
                   </div>
                 </div>
