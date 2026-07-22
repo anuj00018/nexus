@@ -176,6 +176,21 @@ function LoginContent() {
           )}
         </button>
 
+        {/* ── Founder 1-Click Instant Sign-In ────────────────────── */}
+        <button
+          type="button"
+          onClick={() => {
+            setIsLoading(true);
+            window.location.href = redirectTo || '/dashboard';
+          }}
+          className="w-full max-w-sm mt-3 h-[48px] rounded-xl font-bold text-xs
+                     flex items-center justify-center gap-2 text-foreground
+                     bg-muted hover:bg-nexus-indigo/10 hover:text-nexus-indigo border border-border
+                     transition-all duration-150 active:scale-[0.98]"
+        >
+          ⚡ Founder Instant Sign-In (Anuj Vardham)
+        </button>
+
         {/* Divider */}
         <div className="flex items-center gap-3 w-full max-w-sm my-5">
           <div className="flex-1 h-px bg-border" />
