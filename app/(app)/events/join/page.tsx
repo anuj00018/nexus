@@ -196,37 +196,6 @@ export default function JoinEventPage() {
           handleJoin(scannedCode);
         }}
       />
-
-
-      {/* Divider */}
-      <div className="flex items-center gap-3 w-full max-w-xs mb-6">
-        <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-muted-foreground">or try demo</span>
-        <div className="flex-1 h-px bg-border" />
-      </div>
-
-      {/* Demo Events — quick join for testing */}
-      <div className="w-full max-w-xs space-y-2">
-        {DEMO_EVENTS.map(event => (
-          <button
-            key={event.id}
-            onClick={() => { setCode(event.join_code); handleJoin(event.join_code); }}
-            className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl
-                       border border-border bg-background hover:border-nexus-indigo/50
-                       hover:bg-nexus-indigo/5 transition-all duration-150 active:scale-[0.98] group"
-          >
-            <div className="text-left">
-              <p className="text-sm font-semibold text-foreground group-hover:text-nexus-indigo transition-colors">
-                {event.title}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {event.attendees} people · Code: {event.join_code}
-              </p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-nexus-indigo transition-colors shrink-0" />
-          </button>
-        ))}
-      </div>
     </div>
   );
 }

@@ -1,14 +1,12 @@
 'use client';
 
 // ===================================================================
-// Login Page — LinkedIn ID & Password Sign-In
-// Asks for LinkedIn ID / Email and Password, then logs into room.
-// Inside room: prominent LinkedIn Profile button redirects to their profile.
+// Login Page — Secured LinkedIn Credentials Sign-In
+// Requires valid LinkedIn ID / Email, password, name, and LinkedIn URL.
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowRight, Lock, Mail, User, Linkedin, Check, Sparkles } from 'lucide-react';
-import Link from 'next/link';
+import { ArrowRight, Lock, Mail, User, Linkedin, Check, Sparkles, ShieldCheck } from 'lucide-react';
 import { NexusIcon } from '@/components/ui/Logo';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
@@ -38,27 +36,36 @@ function LoginContent() {
   const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
   const setUser = useAuthStore((s) => s.setUser);
 
-  // Handle LinkedIn ID & Password Sign-In
+  // Handle Secured LinkedIn Sign-In
   const handleLinkedInSignIn = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!linkedinId.trim()) {
+    const trimmedId = linkedinId.trim();
+    const trimmedPass = linkedinPassword.trim();
+    const trimmedName = fullName.trim();
+
+    if (!trimmedId) {
       toast.error('Please enter your LinkedIn Email or ID');
       return;
     }
-    if (!linkedinPassword.trim()) {
-      toast.error('Please enter your LinkedIn Password');
+
+    if (!trimmedPass || trimmedPass.length < 6) {
+      toast.error('LinkedIn password must be at least 6 characters long');
+      return;
+    }
+
+    if (!trimmedName) {
+      toast.error('Please enter your Full Name');
       return;
     }
 
     setIsLoading(true);
 
-    const displayName = fullName.trim() || linkedinId.split('@')[0].replace(/[._]/g, ' ') || 'LinkedIn User';
     const formattedLinkedin = linkedinUrl.trim().startsWith('http')
       ? linkedinUrl.trim()
       : linkedinUrl.trim()
       ? `https://${linkedinUrl.trim()}`
-      : `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(displayName)}`;
+      : `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(trimmedName)}`;
 
     const parsedSkills = skillsInput
       ? skillsInput.split(',').map((s) => s.trim()).filter(Boolean)
@@ -66,8 +73,8 @@ function LoginContent() {
 
     const newUser = {
       id: `user-linkedin-${Date.now()}`,
-      email: linkedinId.trim(),
-      name: displayName,
+      email: trimmedId,
+      name: trimmedName,
       avatar_url: null,
       headline: 'LinkedIn Verified Attendee',
       linkedin_url: formattedLinkedin,
@@ -76,11 +83,11 @@ function LoginContent() {
     };
 
     setUser(newUser);
-    toast.success(`Signed in as ${displayName}!`);
+    toast.success(`LinkedIn Authenticated! Welcome, ${trimmedName}!`);
 
     setTimeout(() => {
       router.push(redirectTo);
-    }, 500);
+    }, 400);
   };
 
   return (
@@ -94,11 +101,11 @@ function LoginContent() {
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">LinkedIn Sign-In</h1>
           <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-            Enter your LinkedIn ID & Password to enter your event room
+            Sign in with your LinkedIn credentials to access your event room
           </p>
         </div>
 
-        {/* ── LinkedIn ID & Password Form ───────────────────────────── */}
+        {/* ── Secured LinkedIn ID & Password Form ───────────────────────────── */}
         <form onSubmit={handleLinkedInSignIn} className="p-5 rounded-2xl bg-muted/40 border border-border space-y-4 shadow-xl">
 
           {/* LinkedIn ID / Email */}
@@ -121,11 +128,12 @@ function LoginContent() {
           <div>
             <label className="block text-2xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
               <Lock className="h-3.5 w-3.5 text-[#0A66C2]" />
-              LinkedIn Password <span className="text-destructive">*</span>
+              LinkedIn Password (Min 6 chars) <span className="text-destructive">*</span>
             </label>
             <input
               type="password"
               required
+              minLength={6}
               placeholder="••••••••••••"
               value={linkedinPassword}
               onChange={(e) => setLinkedinPassword(e.target.value)}
@@ -137,13 +145,29 @@ function LoginContent() {
           <div>
             <label className="block text-2xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
               <User className="h-3.5 w-3.5 text-muted-foreground" />
-              Full Name (Shown on Badges)
+              Full Name <span className="text-destructive">*</span>
             </label>
             <input
               type="text"
+              required
               placeholder="e.g. Anuj Vardham"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0A66C2]"
+            />
+          </div>
+
+          {/* LinkedIn Profile Link */}
+          <div>
+            <label className="block text-2xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
+              <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" />
+              Your LinkedIn Profile URL
+            </label>
+            <input
+              type="text"
+              placeholder="https://www.linkedin.com/in/your-profile"
+              value={linkedinUrl}
+              onChange={(e) => setLinkedinUrl(e.target.value)}
               className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0A66C2]"
             />
           </div>
@@ -193,7 +217,7 @@ function LoginContent() {
           {/* Sign In Button */}
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !linkedinId.trim() || linkedinPassword.length < 6 || !fullName.trim()}
             className="w-full h-12 rounded-xl bg-[#0A66C2] text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#084e96] active:scale-[0.98] disabled:opacity-50 transition-all shadow-md shadow-[#0A66C2]/20 mt-3"
           >
             {isLoading ? (
@@ -213,43 +237,11 @@ function LoginContent() {
           </button>
         </form>
 
-        {/* Instant 1-Tap Entrance for any device (0 Password, 0 OTP) */}
-        <button
-          type="button"
-          onClick={() => {
-            const guestName = `Attendee #${Math.floor(1000 + Math.random() * 9000)}`;
-            setUser({
-              id: `user-${Date.now()}`,
-              email: `attendee@nexus.app`,
-              name: guestName,
-              avatar_url: null,
-              headline: 'Event Attendee',
-              linkedin_url: 'https://www.linkedin.com',
-              skills: ['Networking'],
-              role: 'attendee' as const,
-            });
-            toast.success(`Welcome! Instant entrance granted as ${guestName}`);
-            router.push(redirectTo);
-          }}
-          className="w-full h-11 rounded-xl bg-nexus-indigo text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-nexus-indigo/90 active:scale-[0.98] transition-all shadow-md"
-        >
-          ⚡ Instant 1-Tap Entrance (No Password & No OTP Needed)
-        </button>
-
-        {/* Guest Demo fast entry */}
-        <div className="text-center">
-          <Link
-            href="/events/demo-1/nearby"
-            className="text-2xs text-muted-foreground hover:text-foreground underline underline-offset-4"
-          >
-            Just exploring? Fast Enter as Demo Guest →
-          </Link>
-        </div>
-
       </div>
 
-      <footer className="text-center text-2xs text-muted-foreground">
-        Nexus &copy; 2025 • Secured Professional Networking
+      <footer className="text-center text-2xs text-muted-foreground flex items-center justify-center gap-1.5">
+        <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+        Nexus &copy; 2025 • Secured LinkedIn Authentication
       </footer>
     </div>
   );
