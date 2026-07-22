@@ -14,6 +14,7 @@ import {
 import toast from 'react-hot-toast';
 import { EventHeaderNav } from '@/components/events/EventHeaderNav';
 import { DirectChatDrawer } from '@/components/messages/DirectChatDrawer';
+import { AttendeeIntentModal } from '@/components/events/AttendeeIntentModal';
 import { Avatar } from '@/components/ui/Avatar';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
@@ -34,6 +35,7 @@ export default function NearbyPage() {
   const [filter, setFilter] = useState<FilterType>('all');
   const [activeChatRecipient, setActiveChatRecipient] = useState<any | null>(null);
   const [renderedLimit, setRenderedLimit] = useState<number>(50);
+  const [isIntentModalOpen, setIsIntentModalOpen] = useState(false);
 
   // Announce user presence & fetch all live room participants across all devices
   const syncRoomParticipants = useCallback(async () => {
@@ -186,6 +188,14 @@ export default function NearbyPage() {
 
         <div className="flex items-center gap-1.5 shrink-0">
           <button
+            onClick={() => setIsIntentModalOpen(true)}
+            className="px-2.5 py-1.5 rounded-lg bg-nexus-indigo/10 text-nexus-indigo border border-nexus-indigo/20 hover:bg-nexus-indigo/20 active:scale-[0.97] transition-all shrink-0 text-2xs font-bold flex items-center gap-1"
+            title="Set your event goal & skills"
+          >
+            My Goal 🎯
+          </button>
+
+          <button
             onClick={async () => {
               const activeUserId = user?.id || `user-guest-${user?.name ? user.name.toLowerCase().replace(/\s+/g, '-') : 'guest'}`;
               try {
@@ -304,6 +314,19 @@ export default function NearbyPage() {
         isOpen={Boolean(activeChatRecipient)}
         onClose={() => setActiveChatRecipient(null)}
         recipient={activeChatRecipient}
+      />
+
+      {/* Networking Goal & Intent Modal ("Why are you here?") */}
+      <AttendeeIntentModal
+        isOpen={isIntentModalOpen}
+        onClose={() => setIsIntentModalOpen(false)}
+        onSave={(intent, skills) => {
+          if (user) {
+            (user as any).headline = intent;
+            (user as any).skills = skills;
+          }
+          syncRoomParticipants();
+        }}
       />
     </div>
   );
