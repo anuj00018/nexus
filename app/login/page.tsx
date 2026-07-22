@@ -82,7 +82,7 @@ function LoginContent() {
       role: 'attendee' as const,
     };
 
-    setUser(newUser);
+    setUser(newUser as any);
     toast.success(`LinkedIn Authenticated! Welcome, ${trimmedName}!`);
 
     setTimeout(() => {
