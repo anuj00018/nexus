@@ -36,6 +36,7 @@ export default function NearbyPage() {
   const [activeChatRecipient, setActiveChatRecipient] = useState<any | null>(null);
   const [renderedLimit, setRenderedLimit] = useState<number>(50);
   const [isIntentModalOpen, setIsIntentModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
 
   // Announce user presence & fetch all live room participants across all devices
   const syncRoomParticipants = useCallback(async () => {
@@ -284,14 +285,14 @@ export default function NearbyPage() {
                     </div>
                   )}
 
-                  {/* Action Buttons — Direct LinkedIn Profile Link */}
+                  {/* Action Buttons — In-App Profile & Chat (0 External App Switch) */}
                   <div className="mt-3 flex items-center gap-2">
                     <button
-                      onClick={() => openLinkedInProfile(person.name, person.linkedin_url)}
+                      onClick={() => setSelectedProfile(person)}
                       className="flex-1 h-9.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 bg-[#0A66C2] hover:bg-[#084e96] text-white active:scale-[0.97] transition-all shadow-md shadow-[#0A66C2]/20 shrink-0"
                     >
                       <Linkedin className="h-4 w-4 fill-white shrink-0" />
-                      View LinkedIn Profile ↗
+                      View Verified Badge 👤
                     </button>
 
                     <button
@@ -328,6 +329,49 @@ export default function NearbyPage() {
           syncRoomParticipants();
         }}
       />
+
+      {/* In-App Attendee Profile Badge Drawer (0 External App Switches) */}
+      {selectedProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-sm bg-background rounded-3xl border border-border p-6 shadow-2xl space-y-4 text-center">
+            <Avatar src={selectedProfile.avatar_url} alt={selectedProfile.name} size="xl" className="mx-auto" />
+            <div>
+              <h3 className="text-lg font-bold text-foreground">{selectedProfile.name}</h3>
+              <p className="text-xs text-nexus-indigo font-bold mt-0.5">{selectedProfile.headline}</p>
+              <p className="text-2xs text-muted-foreground mt-1 font-mono">{selectedProfile.linkedin_url}</p>
+            </div>
+
+            {selectedProfile.skills?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 justify-center pt-2">
+                {selectedProfile.skills.map((s: string) => (
+                  <span key={s} className="text-2xs px-2.5 py-1 rounded-full bg-muted border border-border text-muted-foreground font-semibold">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setActiveChatRecipient(selectedProfile);
+                  setSelectedProfile(null);
+                }}
+                className="flex-1 h-11 rounded-xl bg-nexus-indigo text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md"
+              >
+                <MessageSquare className="h-4 w-4" /> Start In-App Chat
+              </button>
+
+              <button
+                onClick={() => setSelectedProfile(null)}
+                className="h-11 px-4 rounded-xl bg-muted text-muted-foreground hover:text-foreground font-semibold text-xs"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
