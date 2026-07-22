@@ -188,6 +188,82 @@ export default function AdminPortalPage() {
           </CardContent>
         </Card>
 
+        {/* Private Founder Feedback & Rating Inbox (Visible Only To You) */}
+        <Card variant="accent" padding="lg" className="border-2 border-nexus-indigo/40 bg-nexus-indigo/5">
+          <CardHeader className="p-0 mb-4 flex flex-row items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <ShieldCheck className="h-4 w-4 text-nexus-indigo" />
+                <Badge variant="accent" className="bg-nexus-indigo text-white border-none text-2xs font-bold">
+                  🔒 Private Founder Inbox (Visible Only To You)
+                </Badge>
+              </div>
+              <CardTitle className="text-lg">Attendee Ratings & Written Feedback</CardTitle>
+              <CardDescription className="text-xs">
+                Direct feedback and 5-star ratings submitted by attendees across your event rooms
+              </CardDescription>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-0">
+            <div className="divide-y divide-border border border-border rounded-xl bg-background overflow-hidden">
+              {[
+                {
+                  id: 'f1',
+                  name: 'Rahul Sharma',
+                  rating: 5,
+                  tags: ['Great Matches', 'Easy to Connect'],
+                  comment: 'The 1-tap LinkedIn profile connect made networking super smooth! Found 2 potential co-founders in 20 minutes.',
+                  event: 'TechFest 2025 (NEXUS1)',
+                  time: '12 mins ago',
+                },
+                {
+                  id: 'f2',
+                  name: 'Pooja Verma',
+                  rating: 5,
+                  tags: ['High Quality Attendees', 'Fast Profile Exchange'],
+                  comment: 'Loved how everyone in the room is instantly visible with verified LinkedIn links. Great app!',
+                  event: 'Startup Meetup (NEXUS2)',
+                  time: '34 mins ago',
+                },
+                {
+                  id: 'f3',
+                  name: 'Karan Patel',
+                  rating: 4,
+                  tags: ['Good Hiring Leads'],
+                  comment: 'Excellent event. Met great senior devs looking for new startup roles.',
+                  event: 'AI Hackathon (NEXUS3)',
+                  time: '1 hour ago',
+                },
+              ].map((feedback) => (
+                <div key={feedback.id} className="p-4 space-y-2 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-foreground">{feedback.name}</span>
+                      <span className="text-2xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500">
+                        {feedback.rating} ★★★★★
+                      </span>
+                    </div>
+                    <span className="text-2xs text-muted-foreground">{feedback.time} • {feedback.event}</span>
+                  </div>
+
+                  <p className="text-xs text-foreground/90 font-medium italic">
+                    "{feedback.comment}"
+                  </p>
+
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {feedback.tags.map((t) => (
+                      <span key={t} className="text-2xs px-2 py-0.5 rounded-md bg-nexus-indigo/10 text-nexus-indigo font-bold">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Top Trending Interests */}
         <Card variant="default" padding="lg">
           <CardHeader className="p-0 mb-4">
