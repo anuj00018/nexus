@@ -24,30 +24,12 @@ import toast from 'react-hot-toast';
 const EVENT_CONNECTIONS = [
   {
     id: 'c1',
-    name: 'Arjun Sharma',
-    headline: 'Full Stack Dev @ Razorpay',
+    name: 'Anuj Vardham',
+    headline: 'Founder @ Nexus',
     avatar_url: null,
-    linkedin_url: 'https://linkedin.com/in/demo',
-    tags: ['Matched Interests', 'Exchanged Contacts'],
-    time: '15 mins ago',
-  },
-  {
-    id: 'c2',
-    name: 'Priya Mehta',
-    headline: 'Product Manager @ Swiggy',
-    avatar_url: null,
-    linkedin_url: 'https://linkedin.com/in/demo2',
-    tags: ['Co-founder Goal', 'Hiring'],
-    time: '42 mins ago',
-  },
-  {
-    id: 'c3',
-    name: 'Rohan Das',
-    headline: 'ML Engineer @ Microsoft',
-    avatar_url: null,
-    linkedin_url: 'https://linkedin.com/in/demo3',
-    tags: ['AI / ML', 'Mentoring'],
-    time: '1 hour ago',
+    linkedin_url: 'https://www.linkedin.com/in/anuj-vardham-b399253a1',
+    tags: ['Event Host', 'Founder'],
+    time: 'Active in room',
   },
 ];
 
