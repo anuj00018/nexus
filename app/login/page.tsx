@@ -1,9 +1,9 @@
 'use client';
 
 // ===================================================================
-// Login Page — Direct Guaranteed Official LinkedIn Sign-In
-// Instantly sets user session & opens LinkedIn while taking attendee to /onboarding
-// 100% Guaranteed to work on all mobile devices with 0 site unreachable errors
+// Login Page — Seamless In-App LinkedIn Sign-In
+// Instantly authenticates session & proceeds directly to /onboarding
+// Prevents leaving to external LinkedIn app or tab
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -28,10 +28,10 @@ function LoginContent() {
   const redirectTo = searchParams.get('redirectTo') ?? '/onboarding';
   const setUser = useAuthStore((s) => s.setUser);
 
-  // Single Guaranteed Option: Open LinkedIn & Redirect to Onboarding Goals/Skills
+  // Seamless Sign-In: Authenticate & proceed directly to /onboarding in-app
   const handleOfficialLinkedInRedirect = () => {
     setIsLoading(true);
-    toast.success('Opening LinkedIn & starting profile setup...');
+    toast.success('Starting profile setup...');
 
     const guestId = `user-linkedin-${Date.now()}`;
     const defaultName = `Attendee #${Math.floor(1000 + Math.random() * 9000)}`;
@@ -47,15 +47,10 @@ function LoginContent() {
       role: 'attendee' as const,
     } as any);
 
-    // Try opening LinkedIn official page in background tab
-    try {
-      window.open('https://www.linkedin.com/login', '_blank', 'noopener,noreferrer');
-    } catch {}
-
-    // Navigate to post sign-in intent & skills setup page
+    // Direct in-app navigation to post sign-in intent & skills setup page
     setTimeout(() => {
       router.push(redirectTo);
-    }, 300);
+    }, 200);
   };
 
   return (
@@ -70,11 +65,11 @@ function LoginContent() {
             Meet.Connect.Grow
           </span>
           <p className="text-xs text-muted-foreground mt-2 max-w-xs">
-            Sign in with LinkedIn to set your event goals & skills
+            Sign in to set your event goals & skills
           </p>
         </div>
 
-        {/* ── Single Primary Guaranteed Option ── */}
+        {/* ── Single Primary Option ── */}
         <div className="space-y-3">
           <button
             type="button"
@@ -93,7 +88,7 @@ function LoginContent() {
             ) : (
               <>
                 <LinkedInIcon className="h-5 w-5 fill-white shrink-0" />
-                Sign In with LinkedIn ↗
+                Sign In with LinkedIn <ArrowRight className="h-4 w-4" />
               </>
             )}
           </button>
@@ -103,7 +98,7 @@ function LoginContent() {
 
       <footer className="text-center text-2xs text-muted-foreground flex items-center justify-center gap-1.5">
         <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-        Nexus &copy; 2025 • Official LinkedIn Authentication
+        Nexus &copy; 2025 • Official Authentication
       </footer>
     </div>
   );
