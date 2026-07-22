@@ -170,13 +170,14 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={() => {
+                    const roomCode = createdEventCode;
                     setCreatedEventCode(null);
                     onClose();
-                    router.push('/events/join');
+                    router.push(`/events/${roomCode.toLowerCase()}/nearby`);
                   }}
-                  className="flex-1 py-3 rounded-xl bg-nexus-indigo text-white text-xs font-bold hover:bg-nexus-indigo/90 transition-colors shadow-xs"
+                  className="flex-1 py-3.5 rounded-xl bg-nexus-indigo text-white text-xs font-bold hover:bg-nexus-indigo/90 transition-all shadow-md flex items-center justify-center gap-1.5"
                 >
-                  Go to Join Event Page →
+                  Enter Event Room Now →
                 </button>
               </div>
             </div>

@@ -60,13 +60,10 @@ function LoginContent() {
       });
 
       if (error) {
-        // If Supabase provider is unconfigured, auto-fallback to Custom Form
-        setError('LinkedIn OAuth provider is connecting to Supabase. Fill in your profile below to enter!');
         setShowCustomForm(true);
         setIsLoading(false);
       }
     } catch {
-      setError('LinkedIn OAuth provider connecting. Use Quick Profile Sign-In below!');
       setShowCustomForm(true);
       setIsLoading(false);
     }
