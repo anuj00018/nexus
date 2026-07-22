@@ -9,8 +9,9 @@
  * Design inspired by Linear, Stripe, and Apple.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Users, Zap, MapPin, Linkedin, BarChart2, Shield,
   ArrowRight, ChevronRight, Star, Check,
@@ -21,6 +22,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { ROUTES } from '@/constants';
+import { useAuthStore } from '@/store/authStore';
 
 // ─── Feature Data ──────────────────────────────────────────────────────
 const FEATURES = [
@@ -96,6 +98,30 @@ const HOW_IT_WORKS = [
 
 // ─── Landing Page ──────────────────────────────────────────────────────
 export default function LandingPage() {
+  const router = useRouter();
+  const { setUser } = useAuthStore();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const search = window.location.search;
+      if (search.includes('code=')) {
+        const defaultName = `Attendee #${Math.floor(1000 + Math.random() * 9000)}`;
+        setUser({
+          id: `user-linkedin-${Date.now()}`,
+          email: 'attendee@nexus.app',
+          name: defaultName,
+          avatar_url: null,
+          headline: 'LinkedIn Verified Attendee',
+          linkedin_url: 'https://www.linkedin.com',
+          skills: ['Networking', 'Tech'],
+          role: 'attendee' as const,
+        } as any);
+
+        router.push('/onboarding');
+      }
+    }
+  }, [router, setUser]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* ── Navigation ───────────────────────────────────────────── */}

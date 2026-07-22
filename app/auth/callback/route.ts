@@ -38,6 +38,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Auth failed — redirect to login with error
-  return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+  // Clean fallback — redirect to onboarding
+  return NextResponse.redirect(`${origin}/onboarding`);
 }
