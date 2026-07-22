@@ -4,6 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 // Global room store across warm serverless instances
 const globalRoomStore: Record<string, Map<string, any>> = {};
 
+// Inactivity threshold: 15 seconds without a heartbeat = user left room
+const PRESENCE_TIMEOUT_MS = 15_000;
+
 function getSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -21,40 +24,17 @@ export async function GET(request: Request) {
     globalRoomStore[eventId] = new Map();
   }
 
-  // If Supabase is connected, load persistent participants from DB as well
-  const supabase = getSupabaseClient();
-  if (supabase) {
-    try {
-      const { data: dbParticipants } = await supabase
-        .from('event_participants')
-        .select('user_id, users(id, name, headline, avatar_url, linkedin_url, skills)')
-        .eq('event_id', eventId);
+  const now = Date.now();
+  const roomMap = globalRoomStore[eventId];
 
-      if (dbParticipants && dbParticipants.length > 0) {
-        dbParticipants.forEach((p: any) => {
-          if (p.users?.name) {
-            const formatted = {
-              id: p.users.id,
-              name: p.users.name,
-              headline: p.users.headline || 'Event Attendee',
-              avatar_url: p.users.avatar_url,
-              linkedin_url: p.users.linkedin_url || `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(p.users.name)}`,
-              skills: p.users.skills || ['Networking', 'Tech'],
-              availability: 'available',
-              distance_m: 5,
-              interest_overlap: 2,
-              joinedAt: Date.now(),
-            };
-            globalRoomStore[eventId].set(formatted.id, formatted);
-          }
-        });
-      }
-    } catch (err) {
-      console.warn('DB fetch warning:', err);
+  // Clean up users who left or haven't sent a heartbeat in 15s
+  for (const [userId, participant] of roomMap.entries()) {
+    if (now - (participant.lastActiveAt || 0) > PRESENCE_TIMEOUT_MS) {
+      roomMap.delete(userId);
     }
   }
 
-  const participants = Array.from(globalRoomStore[eventId].values());
+  const participants = Array.from(roomMap.values());
   return NextResponse.json({ success: true, participants });
 }
 
@@ -78,8 +58,10 @@ export async function POST(request: Request) {
       ? `https://${user.linkedin_url.trim()}`
       : `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(user.name)}`;
 
+    const userId = user.id || `user-${user.name.toLowerCase().replace(/\s+/g, '-')}`;
+
     const participant = {
-      id: user.id || `user-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: userId,
       name: user.name.trim(),
       headline: user.headline?.trim() || 'Event Attendee',
       avatar_url: user.avatar_url || null,
@@ -88,18 +70,18 @@ export async function POST(request: Request) {
       availability: 'available',
       distance_m: Math.floor(Math.random() * 20) + 2,
       interest_overlap: 2,
-      joinedAt: Date.now(),
+      lastActiveAt: Date.now(),
     };
 
-    // Store in serverless memory map
-    globalRoomStore[eventId].set(participant.id, participant);
+    // Upsert user into active room map with updated timestamp
+    globalRoomStore[eventId].set(userId, participant);
 
     // Save to Supabase DB if available
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
         await supabase.from('users').upsert({
-          id: participant.id,
+          id: userId,
           name: participant.name,
           headline: participant.headline,
           linkedin_url: participant.linkedin_url,
@@ -108,7 +90,7 @@ export async function POST(request: Request) {
 
         await supabase.from('event_participants').upsert({
           event_id: eventId,
-          user_id: participant.id,
+          user_id: userId,
         }, { onConflict: 'event_id,user_id' });
       } catch (dbErr) {
         console.warn('DB upsert warning:', dbErr);
@@ -120,6 +102,23 @@ export async function POST(request: Request) {
       participant,
       totalCount: globalRoomStore[eventId].size,
     });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+// Explicit exit/leave room endpoint
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const eventId = (searchParams.get('eventId') || 'demo-1').toLowerCase();
+    const userId = searchParams.get('userId');
+
+    if (eventId && userId && globalRoomStore[eventId]) {
+      globalRoomStore[eventId].delete(userId);
+    }
+
+    return NextResponse.json({ success: true, message: 'Removed from room' });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }

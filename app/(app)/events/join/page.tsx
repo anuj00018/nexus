@@ -52,8 +52,16 @@ export default function JoinEventPage() {
   const handleJoin = async (joinCode = code) => {
     const formattedCode = joinCode.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
     if (formattedCode.length !== 6) { setError('Enter a 6-character event code'); return; }
-    setIsLoading(true);
-    setError(null);
+    // Check 4-hour code expiration rule
+    try {
+      const codeMeta = JSON.parse(localStorage.getItem('nexus_created_codes') || '{}');
+      const meta = codeMeta[formattedCode];
+      if (meta && meta.expiresAt && Date.now() > meta.expiresAt) {
+        setError('This 4-hour event code has expired. Please ask the organizer for a new code.');
+        setIsLoading(false);
+        return;
+      }
+    } catch {}
 
     // If Supabase is connected, query database
     if (isSupabaseConfigured) {

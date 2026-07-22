@@ -87,8 +87,15 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
       }
     }
 
+    const expiresAt = Date.now() + 4 * 60 * 60 * 1000; // Expire after 4 hours
+    try {
+      const codeMeta = JSON.parse(localStorage.getItem('nexus_created_codes') || '{}');
+      codeMeta[formattedCode] = { createdAt: Date.now(), expiresAt, title: eventTitle };
+      localStorage.setItem('nexus_created_codes', JSON.stringify(codeMeta));
+    } catch {}
+
     setCreatedEventCode(formattedCode);
-    toast.success(`🎉 Event "${eventTitle}" created! Code: ${formattedCode}`);
+    toast.success(`🎉 Event "${eventTitle}" created! Code: ${formattedCode} (Valid for 4 hours)`);
     setIsSubmitting(false);
   };
 

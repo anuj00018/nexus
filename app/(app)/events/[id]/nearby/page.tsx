@@ -108,8 +108,27 @@ export default function NearbyPage() {
   useEffect(() => {
     syncRoomParticipants();
     const interval = setInterval(syncRoomParticipants, 3000);
-    return () => clearInterval(interval);
-  }, [syncRoomParticipants]);
+
+    const activeUserId = user?.id || `user-guest-${user?.name ? user.name.toLowerCase().replace(/\s+/g, '-') : 'guest'}`;
+
+    // Clean exit when tab closes or user leaves room page
+    const handleLeaveRoom = () => {
+      const leaveUrl = `/api/room?eventId=${eventId}&userId=${encodeURIComponent(activeUserId)}`;
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(leaveUrl);
+      } else {
+        fetch(leaveUrl, { method: 'DELETE' });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleLeaveRoom);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('beforeunload', handleLeaveRoom);
+      handleLeaveRoom();
+    };
+  }, [syncRoomParticipants, eventId, user]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
