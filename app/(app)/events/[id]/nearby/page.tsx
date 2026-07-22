@@ -184,14 +184,31 @@ export default function NearbyPage() {
           ))}
         </div>
 
-        <button
-          onClick={syncRoomParticipants}
-          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors shrink-0 flex items-center gap-1 text-2xs"
-          title="Refresh live room attendees"
-        >
-          <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
-          Sync
-        </button>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={async () => {
+              const activeUserId = user?.id || `user-guest-${user?.name ? user.name.toLowerCase().replace(/\s+/g, '-') : 'guest'}`;
+              try {
+                await fetch(`/api/room?eventId=${eventId}&userId=${encodeURIComponent(activeUserId)}`, { method: 'DELETE' });
+              } catch {}
+              toast.success('Exited Event Room');
+              router.push('/dashboard');
+            }}
+            className="px-2.5 py-1.5 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 active:scale-[0.97] transition-all shrink-0 text-2xs font-bold flex items-center gap-1"
+            title="Exit Event Room"
+          >
+            Exit Room 🚪
+          </button>
+
+          <button
+            onClick={syncRoomParticipants}
+            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors shrink-0 flex items-center gap-1 text-2xs font-medium"
+            title="Refresh live room attendees"
+          >
+            <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
+            Sync
+          </button>
+        </div>
       </div>
 
       {/* Main Attendees List */}

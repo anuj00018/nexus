@@ -7,10 +7,11 @@
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowRight, Lock, Mail, User, Linkedin, Check } from 'lucide-react';
+import { ArrowRight, Lock, Mail, User, Linkedin, Check, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { NexusIcon } from '@/components/ui/Logo';
 import { useAuthStore } from '@/store/authStore';
+import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 function LinkedInIcon({ className }: { className?: string }) {
@@ -29,6 +30,8 @@ function LoginContent() {
   const [linkedinPassword, setLinkedinPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
+  const [skillsInput, setSkillsInput] = useState('Networking, Tech');
+  const [selectedSkills, setSelectedSkills] = useState<string[]>(['Networking', 'Tech']);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -57,6 +60,10 @@ function LoginContent() {
       ? `https://${linkedinUrl.trim()}`
       : `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(displayName)}`;
 
+    const parsedSkills = skillsInput
+      ? skillsInput.split(',').map((s) => s.trim()).filter(Boolean)
+      : ['Networking', 'Tech'];
+
     const newUser = {
       id: `user-linkedin-${Date.now()}`,
       email: linkedinId.trim(),
@@ -64,7 +71,7 @@ function LoginContent() {
       avatar_url: null,
       headline: 'LinkedIn Verified Attendee',
       linkedin_url: formattedLinkedin,
-      skills: ['Networking', 'Tech', 'Startups'],
+      skills: parsedSkills,
       role: 'attendee' as const,
     };
 
@@ -141,19 +148,46 @@ function LoginContent() {
             />
           </div>
 
-          {/* LinkedIn Profile Link */}
+          {/* Custom Skills & Expertise */}
           <div>
             <label className="block text-2xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
-              <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" />
-              Your LinkedIn Profile URL (Optional)
+              <Sparkles className="h-3.5 w-3.5 text-nexus-indigo" />
+              Skills & Expertise (Displayed on Badge)
             </label>
             <input
               type="text"
-              placeholder="https://www.linkedin.com/in/your-profile"
-              value={linkedinUrl}
-              onChange={(e) => setLinkedinUrl(e.target.value)}
-              className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0A66C2]"
+              placeholder="e.g. AI / ML, Product Strategy, React"
+              value={skillsInput}
+              onChange={(e) => setSkillsInput(e.target.value)}
+              className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0A66C2] mb-2"
             />
+            {/* Quick skill chips */}
+            <div className="flex flex-wrap gap-1.5">
+              {['AI / ML', 'Product Strategy', 'Software Eng', 'UI/UX Design', 'Marketing', 'Founder', 'Investing'].map((chip) => {
+                const isSelected = selectedSkills.includes(chip);
+                return (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => {
+                      const next = isSelected
+                        ? selectedSkills.filter((s) => s !== chip)
+                        : [...selectedSkills, chip];
+                      setSelectedSkills(next);
+                      setSkillsInput(next.join(', '));
+                    }}
+                    className={cn(
+                      'text-2xs px-2 py-0.5 rounded-lg border font-semibold transition-all',
+                      isSelected
+                        ? 'bg-nexus-indigo text-white border-nexus-indigo'
+                        : 'bg-background text-muted-foreground border-border hover:border-foreground/30'
+                    )}
+                  >
+                    {chip}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Sign In Button */}
