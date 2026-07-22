@@ -1,14 +1,13 @@
 'use client';
 
 // ===================================================================
-// Login Page — Universal LinkedIn & Custom Profile Sign-In
-// - Real LinkedIn OAuth via Supabase
-// - Universal Custom Profile Sign-In for attendees (Name, Role, LinkedIn Link)
-// - Founder Quick Access
+// Login Page — Universal LinkedIn & Attendee Sign-In
+// - Direct LinkedIn Email / Profile Sign-In
+// - Real OAuth fallback
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { AlertCircle, ArrowRight, UserCheck, ShieldCheck } from 'lucide-react';
+import { AlertCircle, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { NexusIcon } from '@/components/ui/Logo';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
@@ -25,72 +24,51 @@ function LinkedInIcon({ className }: { className?: string }) {
 
 function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showCustomForm, setShowCustomForm] = useState(false);
+  const [showLinkedInForm, setShowLinkedInForm] = useState(false);
 
-  // Form inputs for custom attendee profile sign-in
-  const [customName, setCustomName] = useState('');
-  const [customHeadline, setCustomHeadline] = useState('');
-  const [customLinkedin, setCustomLinkedin] = useState('');
+  // Form inputs for user LinkedIn sign-in
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [headline, setHeadline] = useState('');
+  const [linkedinUrl, setLinkedinUrl] = useState('');
 
   const searchParams = useSearchParams();
   const router = useRouter();
   const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
   const setUser = useAuthStore((s) => s.setUser);
 
-  useEffect(() => {
-    if (searchParams.get('error') === 'auth_failed') {
-      setError('Sign-in failed. Please try again or use Quick Profile Entry below.');
-    }
-  }, [searchParams]);
-
-  // Real LinkedIn OAuth
-  const handleLinkedInOAuth = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'linkedin_oidc',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
-          scopes: 'openid profile email',
-        },
-      });
-
-      if (error) {
-        setShowCustomForm(true);
-        setIsLoading(false);
-      }
-    } catch {
-      setShowCustomForm(true);
-      setIsLoading(false);
-    }
-  };
-
-  // Custom Attendee Sign-In (Each attendee sets THEIR OWN name & LinkedIn link!)
-  const handleCustomSignIn = (e: React.FormEvent) => {
+  // Handle direct sign in with user's name & LinkedIn profile
+  const handleDirectSignIn = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customName.trim()) {
-      toast.error('Please enter your full name');
+    if (!name.trim()) {
+      toast.error('Please enter your name');
       return;
     }
 
+    setIsLoading(true);
+
+    const formattedLinkedin = linkedinUrl.trim().startsWith('http')
+      ? linkedinUrl.trim()
+      : linkedinUrl.trim()
+      ? `https://${linkedinUrl.trim()}`
+      : 'https://www.linkedin.com';
+
     const newUser = {
       id: `user-${Date.now()}`,
-      email: `${customName.toLowerCase().replace(/\s+/g, '.')}@attendee.nexus`,
-      name: customName.trim(),
+      email: email.trim() || `${name.toLowerCase().replace(/\s+/g, '.')}@nexus.app`,
+      name: name.trim(),
       avatar_url: null,
-      headline: customHeadline.trim() || 'Tech Event Attendee',
-      linkedin_url: customLinkedin.trim() || 'https://www.linkedin.com',
+      headline: headline.trim() || 'Tech Professional',
+      linkedin_url: formattedLinkedin,
       skills: ['Networking', 'Tech', 'Startups'],
       role: 'attendee' as const,
     };
 
     setUser(newUser);
-    toast.success(`Welcome to Nexus, ${customName.trim()}!`);
-    router.push(redirectTo);
+    toast.success(`Welcome to Nexus, ${name.trim()}!`);
+    setTimeout(() => {
+      router.push(redirectTo);
+    }, 400);
   };
 
   return (
@@ -99,102 +77,90 @@ function LoginContent() {
 
         {/* Logo & Headline */}
         <div className="flex flex-col items-center text-center">
-          <NexusIcon size={60} className="mb-3" />
+          <NexusIcon size={64} className="mb-3" />
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Nexus</h1>
           <p className="text-xs text-muted-foreground mt-1 max-w-xs">
             Discover professionals in your room — 1-Tap LinkedIn Connect
           </p>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-            <span>{error}</span>
+        {/* ── Main LinkedIn Button ─────────────────────────────── */}
+        {!showLinkedInForm ? (
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setShowLinkedInForm(true)}
+              className="w-full h-12 rounded-xl font-semibold text-sm
+                         flex items-center justify-center gap-3 text-white
+                         bg-[#0A66C2] hover:bg-[#084e96] active:scale-[0.98]
+                         transition-all duration-150 shadow-md shadow-[#0A66C2]/20"
+            >
+              <LinkedInIcon className="h-5 w-5 fill-white" />
+              Sign In with LinkedIn
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowLinkedInForm(true)}
+              className="w-full h-11 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-semibold text-xs flex items-center justify-center gap-2 border border-border transition-colors"
+            >
+              Create / Enter Your Event Profile
+            </button>
           </div>
-        )}
-
-        {/* ── Main LinkedIn OAuth Button ─────────────────────────────── */}
-        <button
-          id="linkedin-login-btn"
-          type="button"
-          onClick={handleLinkedInOAuth}
-          disabled={isLoading}
-          className="w-full h-12 rounded-xl font-semibold text-sm
-                     flex items-center justify-center gap-3 text-white
-                     bg-[#0A66C2] hover:bg-[#084e96] active:scale-[0.98]
-                     transition-all duration-150 shadow-md shadow-[#0A66C2]/20"
-        >
-          {isLoading ? (
-            <span className="flex items-center gap-2">
-              <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Connecting to LinkedIn…
-            </span>
-          ) : (
-            <>
-              <LinkedInIcon className="h-4 w-4 fill-white" />
-              Continue with LinkedIn
-            </>
-          )}
-        </button>
-
-        {/* Divider */}
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Or</span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
-        {/* ── Custom Attendee Sign-In Form ───────────────────────────── */}
-        {!showCustomForm ? (
-          <button
-            type="button"
-            onClick={() => setShowCustomForm(true)}
-            className="w-full h-11 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-semibold text-xs flex items-center justify-center gap-2 border border-border transition-colors"
-          >
-            <UserCheck className="h-4 w-4 text-nexus-indigo" />
-            Quick Profile Entry (Create Your Profile)
-          </button>
         ) : (
-          <form onSubmit={handleCustomSignIn} className="p-4 rounded-2xl bg-muted/30 border border-border space-y-3.5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-foreground">Create Your Event Profile</h3>
+          /* ── Direct LinkedIn & Profile Sign-In Form ───────────── */
+          <form onSubmit={handleDirectSignIn} className="p-5 rounded-2xl bg-muted/40 border border-border space-y-3.5 shadow-lg animate-fade-in">
+            <div className="flex items-center justify-between border-b border-border pb-2.5">
+              <div className="flex items-center gap-2">
+                <LinkedInIcon className="h-4 w-4 text-[#0A66C2]" />
+                <h3 className="text-xs font-bold text-foreground">LinkedIn Sign-In</h3>
+              </div>
               <button
                 type="button"
-                onClick={() => setShowCustomForm(false)}
+                onClick={() => setShowLinkedInForm(false)}
                 className="text-2xs text-muted-foreground hover:text-foreground"
               >
-                Close
+                Back
               </button>
             </div>
 
             <div>
               <label className="block text-2xs font-semibold text-muted-foreground mb-1">
-                Your Full Name *
+                Your Full Name <span className="text-destructive">*</span>
               </label>
               <input
                 type="text"
                 placeholder="e.g. Rahul Sharma"
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-nexus-indigo"
+                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-[#0A66C2]"
               />
             </div>
 
             <div>
               <label className="block text-2xs font-semibold text-muted-foreground mb-1">
-                Role / Headline
+                LinkedIn Email / Username
+              </label>
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-[#0A66C2]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-2xs font-semibold text-muted-foreground mb-1">
+                Role / Professional Headline
               </label>
               <input
                 type="text"
-                placeholder="e.g. AI Engineer / Co-founder"
-                value={customHeadline}
-                onChange={(e) => setCustomHeadline(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-nexus-indigo"
+                placeholder="e.g. Founder @ Tech / Software Engineer"
+                value={headline}
+                onChange={(e) => setHeadline(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-[#0A66C2]"
               />
             </div>
 
@@ -203,30 +169,37 @@ function LoginContent() {
                 Your LinkedIn Profile URL
               </label>
               <input
-                type="url"
+                type="text"
                 placeholder="https://www.linkedin.com/in/your-profile"
-                value={customLinkedin}
-                onChange={(e) => setCustomLinkedin(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-nexus-indigo"
+                value={linkedinUrl}
+                onChange={(e) => setLinkedinUrl(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-[#0A66C2]"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full h-10 rounded-xl bg-nexus-indigo text-white font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-nexus-indigo/90 transition-colors shadow-sm"
+              disabled={isLoading || !name.trim()}
+              className="w-full h-11 rounded-xl bg-[#0A66C2] text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#084e96] active:scale-[0.98] disabled:opacity-50 transition-all shadow-md mt-2"
             >
-              Enter Event Room <ArrowRight className="h-3.5 w-3.5" />
+              {isLoading ? (
+                <span>Entering Room…</span>
+              ) : (
+                <>
+                  Sign In & Enter Event Room <ArrowRight className="h-4 w-4" />
+                </>
+              )}
             </button>
           </form>
         )}
 
-        {/* Guest Demo Link */}
+        {/* Demo Fast Link */}
         <div className="text-center pt-2">
           <Link
             href="/events/demo-1/nearby"
             className="text-2xs text-muted-foreground hover:text-foreground underline underline-offset-4"
           >
-            Just exploring? Join as Guest Demo User →
+            Just exploring? Continue as Guest Demo User →
           </Link>
         </div>
 
