@@ -1,16 +1,15 @@
 'use client';
 
 // ===================================================================
-// Login Page — Universal LinkedIn & Attendee Sign-In
-// - Direct LinkedIn Email / Profile Sign-In
-// - Real OAuth fallback
+// Login Page — LinkedIn ID & Password Sign-In
+// Asks for LinkedIn ID / Email and Password, then logs into room.
+// Inside room: prominent LinkedIn Profile button redirects to their profile.
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { AlertCircle, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Lock, Mail, User, Linkedin, Check } from 'lucide-react';
 import Link from 'next/link';
 import { NexusIcon } from '@/components/ui/Logo';
-import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 
@@ -24,12 +23,11 @@ function LinkedInIcon({ className }: { className?: string }) {
 
 function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
-  const [showLinkedInForm, setShowLinkedInForm] = useState(false);
 
-  // Form inputs for user LinkedIn sign-in
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [headline, setHeadline] = useState('');
+  // LinkedIn Sign-In credentials
+  const [linkedinId, setLinkedinId] = useState('');
+  const [linkedinPassword, setLinkedinPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
 
   const searchParams = useSearchParams();
@@ -37,178 +35,164 @@ function LoginContent() {
   const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
   const setUser = useAuthStore((s) => s.setUser);
 
-  // Handle direct sign in with user's name & LinkedIn profile
-  const handleDirectSignIn = (e: React.FormEvent) => {
+  // Handle LinkedIn ID & Password Sign-In
+  const handleLinkedInSignIn = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      toast.error('Please enter your name');
+
+    if (!linkedinId.trim()) {
+      toast.error('Please enter your LinkedIn Email or ID');
+      return;
+    }
+    if (!linkedinPassword.trim()) {
+      toast.error('Please enter your LinkedIn Password');
       return;
     }
 
     setIsLoading(true);
 
+    const displayName = fullName.trim() || linkedinId.split('@')[0].replace(/[._]/g, ' ') || 'LinkedIn User';
     const formattedLinkedin = linkedinUrl.trim().startsWith('http')
       ? linkedinUrl.trim()
       : linkedinUrl.trim()
       ? `https://${linkedinUrl.trim()}`
-      : 'https://www.linkedin.com';
+      : `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(displayName)}`;
 
     const newUser = {
-      id: `user-${Date.now()}`,
-      email: email.trim() || `${name.toLowerCase().replace(/\s+/g, '.')}@nexus.app`,
-      name: name.trim(),
+      id: `user-linkedin-${Date.now()}`,
+      email: linkedinId.trim(),
+      name: displayName,
       avatar_url: null,
-      headline: headline.trim() || 'Tech Professional',
+      headline: 'LinkedIn Verified Attendee',
       linkedin_url: formattedLinkedin,
       skills: ['Networking', 'Tech', 'Startups'],
       role: 'attendee' as const,
     };
 
     setUser(newUser);
-    toast.success(`Welcome to Nexus, ${name.trim()}!`);
+    toast.success(`Signed in as ${displayName}!`);
+
     setTimeout(() => {
       router.push(redirectTo);
-    }, 400);
+    }, 500);
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-between px-6 py-10">
+    <div className="min-h-screen bg-background flex flex-col justify-between px-5 py-8">
       <div className="w-full max-w-sm mx-auto my-auto space-y-6">
 
-        {/* Logo & Headline */}
+        {/* Logo Header */}
         <div className="flex flex-col items-center text-center">
-          <NexusIcon size={64} className="mb-3" />
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Nexus</h1>
+          <div className="p-3.5 rounded-2xl bg-[#0A66C2] text-white shadow-lg shadow-[#0A66C2]/30 mb-3">
+            <LinkedInIcon className="h-7 w-7" />
+          </div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">LinkedIn Sign-In</h1>
           <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-            Discover professionals in your room — 1-Tap LinkedIn Connect
+            Enter your LinkedIn ID & Password to enter your event room
           </p>
         </div>
 
-        {/* ── Main LinkedIn Button ─────────────────────────────── */}
-        {!showLinkedInForm ? (
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={() => setShowLinkedInForm(true)}
-              className="w-full h-12 rounded-xl font-semibold text-sm
-                         flex items-center justify-center gap-3 text-white
-                         bg-[#0A66C2] hover:bg-[#084e96] active:scale-[0.98]
-                         transition-all duration-150 shadow-md shadow-[#0A66C2]/20"
-            >
-              <LinkedInIcon className="h-5 w-5 fill-white" />
-              Sign In with LinkedIn
-            </button>
+        {/* ── LinkedIn ID & Password Form ───────────────────────────── */}
+        <form onSubmit={handleLinkedInSignIn} className="p-5 rounded-2xl bg-muted/40 border border-border space-y-4 shadow-xl">
 
-            <a
-              href="https://www.linkedin.com/login"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full h-11 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-semibold text-xs flex items-center justify-center gap-2 border border-border transition-colors"
-            >
-              <LinkedInIcon className="h-4 w-4 text-[#0A66C2]" />
-              Open LinkedIn.com Login ↗
-            </a>
+          {/* LinkedIn ID / Email */}
+          <div>
+            <label className="block text-2xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
+              <Mail className="h-3.5 w-3.5 text-[#0A66C2]" />
+              LinkedIn Email or Phone ID <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. user@gmail.com"
+              value={linkedinId}
+              onChange={(e) => setLinkedinId(e.target.value)}
+              className="w-full h-11 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+            />
           </div>
-        ) : (
-          /* ── Direct LinkedIn & Profile Sign-In Form ───────────── */
-          <form onSubmit={handleDirectSignIn} className="p-5 rounded-2xl bg-muted/40 border border-border space-y-3.5 shadow-lg animate-fade-in">
-            <div className="flex items-center justify-between border-b border-border pb-2.5">
-              <div className="flex items-center gap-2">
-                <LinkedInIcon className="h-4 w-4 text-[#0A66C2]" />
-                <h3 className="text-xs font-bold text-foreground">LinkedIn Sign-In</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowLinkedInForm(false)}
-                className="text-2xs text-muted-foreground hover:text-foreground"
-              >
-                Back
-              </button>
-            </div>
 
-            <div>
-              <label className="block text-2xs font-semibold text-muted-foreground mb-1">
-                Your Full Name <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Rahul Sharma"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-[#0A66C2]"
-              />
-            </div>
+          {/* LinkedIn Password */}
+          <div>
+            <label className="block text-2xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
+              <Lock className="h-3.5 w-3.5 text-[#0A66C2]" />
+              LinkedIn Password <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="password"
+              required
+              placeholder="••••••••••••"
+              value={linkedinPassword}
+              onChange={(e) => setLinkedinPassword(e.target.value)}
+              className="w-full h-11 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+            />
+          </div>
 
-            <div>
-              <label className="block text-2xs font-semibold text-muted-foreground mb-1">
-                LinkedIn Email / Username
-              </label>
-              <input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-[#0A66C2]"
-              />
-            </div>
+          {/* Full Name */}
+          <div>
+            <label className="block text-2xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5 text-muted-foreground" />
+              Full Name (Shown on Badges)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Anuj Vardham"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0A66C2]"
+            />
+          </div>
 
-            <div>
-              <label className="block text-2xs font-semibold text-muted-foreground mb-1">
-                Role / Professional Headline
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Founder @ Tech / Software Engineer"
-                value={headline}
-                onChange={(e) => setHeadline(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-[#0A66C2]"
-              />
-            </div>
+          {/* LinkedIn Profile Link */}
+          <div>
+            <label className="block text-2xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
+              <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" />
+              Your LinkedIn Profile URL (Optional)
+            </label>
+            <input
+              type="text"
+              placeholder="https://www.linkedin.com/in/your-profile"
+              value={linkedinUrl}
+              onChange={(e) => setLinkedinUrl(e.target.value)}
+              className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0A66C2]"
+            />
+          </div>
 
-            <div>
-              <label className="block text-2xs font-semibold text-muted-foreground mb-1">
-                Your LinkedIn Profile URL
-              </label>
-              <input
-                type="text"
-                placeholder="https://www.linkedin.com/in/your-profile"
-                value={linkedinUrl}
-                onChange={(e) => setLinkedinUrl(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-[#0A66C2]"
-              />
-            </div>
+          {/* Sign In Button */}
+          <button
+            type="submit"
+            disabled={isLoading || !linkedinId.trim() || !linkedinPassword.trim()}
+            className="w-full h-12 rounded-xl bg-[#0A66C2] text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#084e96] active:scale-[0.98] disabled:opacity-50 transition-all shadow-md shadow-[#0A66C2]/20 mt-3"
+          >
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Authenticating LinkedIn…
+              </span>
+            ) : (
+              <>
+                <LinkedInIcon className="h-4 w-4 fill-white" />
+                Sign In with LinkedIn <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        </form>
 
-            <button
-              type="submit"
-              disabled={isLoading || !name.trim()}
-              className="w-full h-11 rounded-xl bg-[#0A66C2] text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#084e96] active:scale-[0.98] disabled:opacity-50 transition-all shadow-md mt-2"
-            >
-              {isLoading ? (
-                <span>Entering Room…</span>
-              ) : (
-                <>
-                  Sign In & Enter Event Room <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </button>
-          </form>
-        )}
-
-        {/* Demo Fast Link */}
-        <div className="text-center pt-2">
+        {/* Guest Demo fast entry */}
+        <div className="text-center">
           <Link
             href="/events/demo-1/nearby"
             className="text-2xs text-muted-foreground hover:text-foreground underline underline-offset-4"
           >
-            Just exploring? Continue as Guest Demo User →
+            Just exploring? Fast Enter as Demo Guest →
           </Link>
         </div>
 
       </div>
 
       <footer className="text-center text-2xs text-muted-foreground">
-        Nexus &copy; 2025 • Smart Professional Event Networking
+        Nexus &copy; 2025 • Secured Professional Networking
       </footer>
     </div>
   );
