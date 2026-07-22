@@ -55,13 +55,47 @@ export default function NearbyPage() {
         body: JSON.stringify({ eventId, user: activeUser }),
       });
 
-      // 2. Fetch all participants currently in this room across all devices
+      // 2. Save active user to local cache for instant multi-tab fallback
+      try {
+        const cacheKey = `nexus_global_room_${eventId}`;
+        const localCached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+        if (!localCached.some((p: any) => p.name === activeUser.name)) {
+          localCached.push(activeUser);
+          localStorage.setItem(cacheKey, JSON.stringify(localCached));
+        }
+      } catch {}
+
+      // 3. Fetch all participants currently in this room across all devices
       const res = await fetch(`/api/room?eventId=${eventId}`);
       const data = await res.json();
 
+      let mergedList: any[] = [];
       if (data.success && Array.isArray(data.participants)) {
-        setPeople(data.participants);
+        mergedList = [...data.participants];
       }
+
+      // Merge with local cache fallback
+      try {
+        const cacheKey = `nexus_global_room_${eventId}`;
+        const localCached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+        localCached.forEach((item: any) => {
+          if (!mergedList.some((m) => m.name === item.name || m.id === item.id)) {
+            mergedList.push({
+              id: item.id || `user-${Date.now()}`,
+              name: item.name,
+              headline: item.headline || 'Event Attendee',
+              avatar_url: item.avatar_url,
+              linkedin_url: item.linkedin_url || `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(item.name)}`,
+              skills: item.skills || ['Networking'],
+              availability: 'available',
+              distance_m: 5,
+              interest_overlap: 2,
+            });
+          }
+        });
+      } catch {}
+
+      setPeople(mergedList);
     } catch (err) {
       console.error('Room sync error:', err);
     } finally {
