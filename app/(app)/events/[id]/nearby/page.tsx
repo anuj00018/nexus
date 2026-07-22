@@ -113,6 +113,20 @@ export default function NearbyPage() {
   const [formattedTime, setFormattedTime] = useState<string>('');
   const [renderedLimit, setRenderedLimit] = useState<number>(50);
 
+  const handleConnect = (personId: string, linkedinUrl?: string, name?: string) => {
+    let targetUrl = linkedinUrl?.trim();
+    if (targetUrl && !targetUrl.startsWith('http')) {
+      targetUrl = `https://${targetUrl}`;
+    }
+    if (!targetUrl || targetUrl === 'https://www.linkedin.com' || targetUrl.length < 18) {
+      targetUrl = name
+        ? `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(name)}`
+        : 'https://www.linkedin.com/in/anuj-vardham-b399253a1';
+    }
+    toast.success(`Opening ${name || 'Attendee'}'s LinkedIn Profile...`);
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  };
+
   useEffect(() => {
     setFormattedTime(lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   }, [lastUpdated]);

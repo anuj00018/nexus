@@ -99,13 +99,15 @@ function LoginContent() {
               Sign In with LinkedIn
             </button>
 
-            <button
-              type="button"
-              onClick={() => setShowLinkedInForm(true)}
+            <a
+              href="https://www.linkedin.com/login"
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-full h-11 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-semibold text-xs flex items-center justify-center gap-2 border border-border transition-colors"
             >
-              Create / Enter Your Event Profile
-            </button>
+              <LinkedInIcon className="h-4 w-4 text-[#0A66C2]" />
+              Open LinkedIn.com Login ↗
+            </a>
           </div>
         ) : (
           /* ── Direct LinkedIn & Profile Sign-In Form ───────────── */
