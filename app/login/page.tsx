@@ -1,9 +1,8 @@
 'use client';
 
 // ===================================================================
-// Login Page — 100% In-App Sign-In Redirect
-// Guarantees immediate in-app navigation to /onboarding
-// Completely avoids launching external LinkedIn app or tabs
+// Login Page — Direct In-App Navigation to Onboarding
+// Uses window.location.replace('/onboarding') for immediate navigation
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -28,10 +27,9 @@ function LoginContent() {
   const redirectTo = searchParams.get('redirectTo') ?? '/onboarding';
   const setUser = useAuthStore((s) => s.setUser);
 
-  // Direct In-App Navigation to /onboarding (0 External App Switch)
+  // Direct In-App Navigation to /onboarding
   const handleInAppSignIn = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     setIsLoading(true);
     toast.success('Starting profile setup...');
 
@@ -49,8 +47,7 @@ function LoginContent() {
       role: 'attendee' as const,
     } as any);
 
-    // Guaranteed direct in-app navigation (NO external window/app switch)
-    window.location.href = redirectTo.startsWith('/') ? redirectTo : '/onboarding';
+    window.location.replace(redirectTo.startsWith('/') ? redirectTo : '/onboarding');
   };
 
   return (
@@ -88,7 +85,7 @@ function LoginContent() {
             ) : (
               <>
                 <LinkedInIcon className="h-5 w-5 fill-white shrink-0" />
-                Sign In with LinkedIn <ArrowRight className="h-4 w-4" />
+                Sign In & Set Profile Goals <ArrowRight className="h-4 w-4" />
               </>
             )}
           </button>
