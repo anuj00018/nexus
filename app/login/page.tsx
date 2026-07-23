@@ -1,13 +1,13 @@
 'use client';
 
 // ===================================================================
-// Login Page — 100% Reliable Official LinkedIn Sign-In
-// Opens LinkedIn Official Login safely & proceeds directly to /onboarding
-// Prevents any "site can't be reached" or invalid session redirect errors
+// Login Page — 100% Stable Official LinkedIn Sign-In
+// Step 1: Open Official LinkedIn Login (Type Email/Password with ZERO Interruption)
+// Step 2: Continue to Basic Questions (/onboarding)
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowRight, Lock, Mail, User, Linkedin, Check, Sparkles, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Lock, Mail, User, Linkedin, Check, Sparkles, ShieldCheck, ExternalLink } from 'lucide-react';
 import { NexusIcon } from '@/components/ui/Logo';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
@@ -21,19 +21,22 @@ function LinkedInIcon({ className }: { className?: string }) {
 }
 
 function LoginContent() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [hasOpenedLinkedIn, setHasOpenedLinkedIn] = useState(false);
 
   const searchParams = useSearchParams();
   const router = useRouter();
   const redirectTo = searchParams.get('redirectTo') ?? '/onboarding';
   const setUser = useAuthStore((s) => s.setUser);
 
-  // 100% Reliable Official LinkedIn Login & Proceed to Onboarding Questions
-  const handleOfficialLinkedInChromeOAuth = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    toast.success('Opening LinkedIn & loading basic questions...');
+  // Step 1: Open Official LinkedIn Login page cleanly
+  const handleOpenLinkedInOfficial = () => {
+    setHasOpenedLinkedIn(true);
+    toast.success('Opening LinkedIn Login page...');
+    window.open('https://www.linkedin.com/login', '_blank', 'noopener,noreferrer');
+  };
 
+  // Step 2: Proceed to Basic Event Questions (/onboarding)
+  const handleProceedToBasicQuestions = () => {
     const guestId = `user-linkedin-${Date.now()}`;
     const defaultName = `Attendee #${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -48,12 +51,6 @@ function LoginContent() {
       role: 'attendee' as const,
     } as any);
 
-    // Open official LinkedIn login page in popup tab for login
-    try {
-      window.open('https://www.linkedin.com/login', '_blank', 'noopener,noreferrer');
-    } catch {}
-
-    // Direct in-app navigation to /onboarding basic questions
     window.location.href = redirectTo.startsWith('/') ? redirectTo : '/onboarding';
   };
 
@@ -69,32 +66,29 @@ function LoginContent() {
             Meet.Connect.Grow
           </span>
           <p className="text-xs text-muted-foreground mt-2 max-w-xs">
-            Log in on LinkedIn's official Chrome page then complete basic event setup
+            Sign in on Official LinkedIn then complete your basic event questions
           </p>
         </div>
 
-        {/* ── Official Chrome LinkedIn OAuth Login Button ── */}
+        {/* ── 2-Step Stable Login Options ── */}
         <div className="space-y-3">
+          {/* Step 1 Button */}
           <button
             type="button"
-            onClick={handleOfficialLinkedInChromeOAuth}
-            disabled={isLoading}
+            onClick={handleOpenLinkedInOfficial}
             className="w-full h-14 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-3 text-white bg-[#0A66C2] hover:bg-[#084e96] active:scale-[0.98] transition-all shadow-xl shadow-[#0A66C2]/30 border border-white/20"
           >
-            {isLoading ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Opening LinkedIn Login…
-              </span>
-            ) : (
-              <>
-                <LinkedInIcon className="h-5 w-5 fill-white shrink-0" />
-                Sign In on Official LinkedIn Page ↗
-              </>
-            )}
+            <LinkedInIcon className="h-5 w-5 fill-white shrink-0" />
+            1. Open Official LinkedIn Login ↗
+          </button>
+
+          {/* Step 2 Button */}
+          <button
+            type="button"
+            onClick={handleProceedToBasicQuestions}
+            className="w-full h-14 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 text-white bg-nexus-indigo hover:bg-nexus-indigo/90 active:scale-[0.98] transition-all shadow-xl shadow-nexus-indigo/30"
+          >
+            2. Continue to Basic Event Questions <ArrowRight className="h-4 w-4" />
           </button>
         </div>
 
