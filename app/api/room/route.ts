@@ -63,11 +63,9 @@ export async function POST(request: Request) {
     const participant = {
       id: userId,
       name: user.name.trim(),
-      headline: user.headline?.trim() || 'Tech Professional',
       company: user.company?.trim() || 'Tech Network',
       avatar_url: user.avatar_url || null,
       linkedin_url: formattedLinkedin,
-      skills: user.skills || [],
       interests: user.interests || [],
       looking_for: user.looking_for || ['Networking'],
       bio: user.bio || null,
@@ -86,11 +84,9 @@ export async function POST(request: Request) {
         await supabase.from('users').upsert({
           id: userId,
           name: participant.name,
-          headline: participant.headline,
           company: participant.company,
           avatar_url: participant.avatar_url,
           linkedin_url: participant.linkedin_url,
-          skills: participant.skills,
           role: participant.role,
           is_verified: true,
         }, { onConflict: 'id' });

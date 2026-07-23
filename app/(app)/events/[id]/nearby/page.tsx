@@ -209,12 +209,9 @@ export default function NearbyPage() {
                           </span>
                         </div>
 
-                        {/* Headline */}
-                        <p className="text-xs text-foreground/80 font-medium mt-0.5">{person.headline || 'Tech Professional'}</p>
-
                         {/* Organization / College */}
                         {person.company && (
-                          <p className="text-2xs text-muted-foreground flex items-center gap-1 mt-0.5 font-semibold">
+                          <p className="text-2xs text-muted-foreground flex items-center gap-1 mt-1 font-semibold">
                             <Building2 className="h-3 w-3 text-muted-foreground" />
                             {person.company}
                           </p>
@@ -240,11 +237,11 @@ export default function NearbyPage() {
                       </div>
                     )}
 
-                    {/* Skills & Interests */}
-                    {person.skills?.length > 0 && (
+                    {/* Interests & Domains */}
+                    {person.interests?.length > 0 && (
                       <div className="flex flex-wrap gap-1 pt-0.5">
-                        {person.skills.map((s: string) => (
-                          <span key={s} className="text-2xs px-2 py-0.5 rounded-md bg-muted text-muted-foreground font-medium border border-border">
+                        {person.interests.map((s: string) => (
+                          <span key={s} className="text-2xs px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-600 font-medium border border-purple-500/20">
                             {s}
                           </span>
                         ))}
