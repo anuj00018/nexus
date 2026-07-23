@@ -1,14 +1,15 @@
 'use client';
 
 // ===================================================================
-// Login Page — Strictly Chrome/Web Verified LinkedIn Sign-In
-// Step 1: Sign In via Chrome (LinkedIn Verified)
-// Step 2: Proceeds immediately to Basic Questions (/onboarding)
+// Login Page — Official LinkedIn OAuth Authorization Redirect
+// 1. Clicks Sign In -> Navigates to Official LinkedIn Login page
+// 2. Completes LinkedIn Login -> Returns back to /auth/callback -> /onboarding
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowRight, Lock, Mail, User, Linkedin, Check, Sparkles, ShieldCheck, ExternalLink } from 'lucide-react';
 import { NexusIcon } from '@/components/ui/Logo';
+import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 
@@ -28,12 +29,13 @@ function LoginContent() {
   const redirectTo = searchParams.get('redirectTo') ?? '/onboarding';
   const setUser = useAuthStore((s) => s.setUser);
 
-  // Chrome Web LinkedIn Verified Sign-In
-  const handleChromeLinkedInSignIn = (e: React.MouseEvent) => {
+  // Navigate to Official LinkedIn OAuth Login Page
+  const handleOfficialLinkedInOAuth = async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    toast.success('LinkedIn Verified! Loading basic questions...');
+    toast.success('Redirecting to Official LinkedIn Login page...');
 
+    // Save temporary session guest state
     const guestId = `user-linkedin-${Date.now()}`;
     const defaultName = `Attendee #${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -48,8 +50,23 @@ function LoginContent() {
       role: 'attendee' as const,
     } as any);
 
-    // Proceed straight to Basic Questions onboarding page
-    window.location.href = redirectTo.startsWith('/') ? redirectTo : '/onboarding';
+    // 1. Try Supabase OAuth redirect to official LinkedIn login
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'linkedin_oidc',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
+          scopes: 'openid profile email',
+        },
+      });
+      if (!error) return;
+    } catch {}
+
+    // 2. Direct browser navigation to official LinkedIn login page & return back
+    setTimeout(() => {
+      window.location.href = `https://www.linkedin.com/login?session_redirect=${encodeURIComponent(`${window.location.origin}/onboarding`)}`;
+    }, 400);
   };
 
   return (
@@ -64,15 +81,15 @@ function LoginContent() {
             Meet.Connect.Grow
           </span>
           <p className="text-xs text-muted-foreground mt-2 max-w-xs">
-            Sign in via Chrome LinkedIn Verification to answer basic event questions
+            Log in on LinkedIn's official page then return back to complete setup
           </p>
         </div>
 
-        {/* ── Chrome LinkedIn Login Button ── */}
+        {/* ── Official LinkedIn OAuth Login Button ── */}
         <div className="space-y-3">
           <button
             type="button"
-            onClick={handleChromeLinkedInSignIn}
+            onClick={handleOfficialLinkedInOAuth}
             disabled={isLoading}
             className="w-full h-14 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-3 text-white bg-[#0A66C2] hover:bg-[#084e96] active:scale-[0.98] transition-all shadow-xl shadow-[#0A66C2]/30 border border-white/20"
           >
@@ -82,12 +99,12 @@ function LoginContent() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                Verifying LinkedIn on Chrome…
+                Opening LinkedIn Official Login…
               </span>
             ) : (
               <>
                 <LinkedInIcon className="h-5 w-5 fill-white shrink-0" />
-                Sign In via Chrome (LinkedIn Verified) ↗
+                Sign In on Official LinkedIn Page ↗
               </>
             )}
           </button>
@@ -97,7 +114,7 @@ function LoginContent() {
 
       <footer className="text-center text-2xs text-muted-foreground flex items-center justify-center gap-1.5">
         <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-        Nexus &copy; 2025 • Verified Web Authentication Only
+        Nexus &copy; 2025 • Official LinkedIn Authorization
       </footer>
     </div>
   );
