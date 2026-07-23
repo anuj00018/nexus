@@ -1,17 +1,15 @@
 'use client';
 
 // ===================================================================
-// Login Page — Sign In with LinkedIn (Official Authorization Redirect)
-// 1. Button: Sign In with LinkedIn
-// 2. Click -> Opens Official LinkedIn Page to authenticate ID & Password
-// 3. Returns back to app -> Asks Name, Interests & Skills (/onboarding)
+// Nexus Login Page — Standard Production Official LinkedIn OAuth 2.0
+// Single Primary Action: Continue with LinkedIn
+// Redirects directly to official LinkedIn login page via Supabase Auth
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowRight, Lock, Mail, User, Check, Sparkles, ShieldCheck, Linkedin } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { ShieldCheck } from 'lucide-react';
 import { NexusIcon } from '@/components/ui/Logo';
 import { createClient } from '@/lib/supabase/client';
-import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 
 function LinkedInIcon({ className }: { className?: string }) {
@@ -24,47 +22,54 @@ function LinkedInIcon({ className }: { className?: string }) {
 
 function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
-
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
+  const redirectTo = searchParams.get('redirectTo') ?? '/events/demo-1/nearby';
 
-  // Sign In with LinkedIn -> Official Authentication Page
-  const handleOfficialLinkedInAuth = async (e: React.MouseEvent) => {
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam) {
+      toast.error(`Authentication notice: ${decodeURIComponent(errorParam)}`);
+    }
+  }, [searchParams]);
+
+  // Standard Official OAuth Flow with LinkedIn via Supabase Auth
+  const handleLinkedInOAuth = async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    toast.success('Redirecting to Official LinkedIn Login page...');
+    toast.loading('Redirecting to official LinkedIn login...');
 
-    const guestId = `user-linkedin-${Date.now()}`;
-
-    setUser({
-      id: guestId,
-      email: `${guestId}@linkedin.app`,
-      name: 'LinkedIn Verified Attendee',
-      avatar_url: null,
-      headline: 'Tech Networking 🌐',
-      linkedin_url: 'https://www.linkedin.com',
-      skills: ['Networking', 'Tech'],
-      role: 'attendee' as const,
-    } as any);
-
-    // 1. Try Supabase Official LinkedIn OIDC Auth
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOAuth({
+      const callbackUrl = `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirectTo=/onboarding`,
+          redirectTo: callbackUrl,
           scopes: 'openid profile email',
         },
       });
-      if (!error) return;
-    } catch {}
 
-    // 2. Direct browser navigation to official LinkedIn login page & return back to /onboarding
-    setTimeout(() => {
-      window.location.href = `/onboarding`;
-    }, 300);
+      if (error) {
+        toast.dismiss();
+        toast.error(`OAuth error: ${error.message}`);
+        setIsLoading(false);
+        return;
+      }
+
+      if (data?.url) {
+        // Direct browser navigation to official LinkedIn authorization URL
+        window.location.href = data.url;
+      } else {
+        toast.dismiss();
+        toast.error('Unable to retrieve LinkedIn OAuth URL from Supabase.');
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      toast.dismiss();
+      toast.error(err.message || 'Failed to initiate LinkedIn OAuth');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -79,15 +84,15 @@ function LoginContent() {
             Meet.Connect.Grow
           </span>
           <p className="text-xs text-muted-foreground mt-2 max-w-xs">
-            Sign in on LinkedIn's official page then set your profile name & interests
+            Sign in with your official LinkedIn account to access Nexus
           </p>
         </div>
 
-        {/* ── Sign In with LinkedIn Button ── */}
+        {/* ── Single Production Action: Continue with LinkedIn ── */}
         <div className="space-y-3">
           <button
             type="button"
-            onClick={handleOfficialLinkedInAuth}
+            onClick={handleLinkedInOAuth}
             disabled={isLoading}
             className="w-full h-14 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-3 text-white bg-[#0A66C2] hover:bg-[#084e96] active:scale-[0.98] transition-all shadow-xl shadow-[#0A66C2]/30 border border-white/20"
           >
@@ -97,12 +102,12 @@ function LoginContent() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                Connecting to Official LinkedIn…
+                Redirecting to LinkedIn…
               </span>
             ) : (
               <>
                 <LinkedInIcon className="h-5 w-5 fill-white shrink-0" />
-                Sign In with LinkedIn ↗
+                Continue with LinkedIn ↗
               </>
             )}
           </button>
@@ -112,7 +117,7 @@ function LoginContent() {
 
       <footer className="text-center text-2xs text-muted-foreground flex items-center justify-center gap-1.5">
         <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-        Nexus &copy; 2025 • Official LinkedIn Account Authorization
+        Nexus &copy; 2025 • Official LinkedIn OAuth 2.0 Authentication
       </footer>
     </div>
   );

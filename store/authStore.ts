@@ -38,14 +38,14 @@ const DEFAULT_USER: User = {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user: DEFAULT_USER,
+      user: null,
       isLoading: false,
-      isOnboarded: true,
+      isOnboarded: false,
 
-      setUser: (user) => set({ user: user || DEFAULT_USER, isLoading: false }),
+      setUser: (user) => set({ user, isLoading: false }),
       setLoading: (isLoading) => set({ isLoading }),
       setOnboarded: (isOnboarded) => set({ isOnboarded }),
-      clearUser: () => set({ user: DEFAULT_USER, isLoading: false, isOnboarded: true }),
+      clearUser: () => set({ user: null, isLoading: false, isOnboarded: false }),
     }),
 
     {

@@ -1,7 +1,7 @@
 // ===================================================================
-// Auth Callback Route Handler
-// Supabase calls this URL after LinkedIn OAuth completes.
-// Exchanges the auth code for a session and redirects the user.
+// Auth Callback Route Handler — Official Supabase OAuth Code Exchange
+// Supabase redirects here after official LinkedIn authentication completes.
+// Exchanges authorization code for an authenticated session & sets cookies.
 // ===================================================================
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -9,35 +9,22 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  // Where to redirect after login (passed as state param)
-  const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
-  const next = redirectTo.startsWith('/') ? redirectTo : '/dashboard';
+  const redirectTo = searchParams.get('redirectTo') ?? '/events/demo-1/nearby';
+  const next = redirectTo.startsWith('/') ? redirectTo : '/events/demo-1/nearby';
 
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // Check if user has completed onboarding
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data: prefs } = await supabase
-          .from('user_preferences')
-          .select('onboarding_done')
-          .eq('user_id', user.id)
-          .single();
-
-        // First time user — send to onboarding
-        if (!prefs?.onboarding_done) {
-          return NextResponse.redirect(`${origin}/onboarding`);
-        }
-      }
-
+      // Authenticated session established & session cookies set via SSR
       return NextResponse.redirect(`${origin}${next}`);
+    } else {
+      console.error('Supabase OAuth exchangeCodeForSession error:', error);
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`);
     }
   }
 
-  // Direct clean room entry
-  return NextResponse.redirect(`${origin}/events/demo-1/nearby`);
+  // Missing auth code in callback URL
+  return NextResponse.redirect(`${origin}/login?error=missing_auth_code`);
 }
