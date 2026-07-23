@@ -1,26 +1,24 @@
 'use client';
 
 // ===================================================================
-// Nearby People Page — Global Real-Time Cross-Device Attendee Sync
-// Syncs attendees live across all phones & laptops!
-// Each attendee card displays their typed LinkedIn link & direct profile button.
+// Nearby Event Room — Real LinkedIn-Authenticated Attendees Only
+// Displays real profiles: Photo, Name, Headline, College/Company,
+// Skills, Interests, "Looking For", and LinkedIn Verified Badge.
 // ===================================================================
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Linkedin, RefreshCw, Users, MapPin, Wifi, WifiOff,
-  Star, Zap, Filter, MessageSquare, ExternalLink
+  Linkedin, RefreshCw, Users, MapPin, MessageSquare,
+  ExternalLink, ShieldCheck, Crown, Sparkles, Building2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { EventHeaderNav } from '@/components/events/EventHeaderNav';
 import { DirectChatDrawer } from '@/components/messages/DirectChatDrawer';
-import { AttendeeIntentModal } from '@/components/events/AttendeeIntentModal';
 import { Avatar } from '@/components/ui/Avatar';
-import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 
-type FilterType = 'all' | 'matches' | 'available';
+type FilterType = 'all' | 'looking_for' | 'verified';
 
 export default function NearbyPage() {
   const params = useParams();
@@ -31,90 +29,48 @@ export default function NearbyPage() {
   const { user } = useAuthStore();
   const [people, setPeople] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [filter, setFilter] = useState<FilterType>('all');
   const [activeChatRecipient, setActiveChatRecipient] = useState<any | null>(null);
-  const [renderedLimit, setRenderedLimit] = useState<number>(50);
-  const [isIntentModalOpen, setIsIntentModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
 
-  // Announce user presence & fetch all live room participants across all devices
+  // Sync real room participants across devices
   const syncRoomParticipants = useCallback(async () => {
+    if (!user) return;
     setIsLoading(true);
 
-    const activeUser = user || {
-      id: `user-guest-${Date.now()}`,
-      name: 'Guest Attendee',
-      headline: 'Event Attendee',
-      linkedin_url: 'https://www.linkedin.com',
-      skills: ['Networking'],
-    };
-
     try {
-      // 1. Announce current user to global room API
+      // 1. Announce active authenticated user to real room API
       await fetch('/api/room', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, user: activeUser }),
+        body: JSON.stringify({ eventId, user }),
       });
 
-      // 2. Save active user to local cache for instant multi-tab fallback
-      try {
-        const cacheKey = `nexus_global_room_${eventId}`;
-        const localCached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-        if (!localCached.some((p: any) => p.name === activeUser.name)) {
-          localCached.push(activeUser);
-          localStorage.setItem(cacheKey, JSON.stringify(localCached));
-        }
-      } catch {}
-
-      // 3. Fetch all participants currently in this room across all devices
+      // 2. Fetch all real participants in this room
       const res = await fetch(`/api/room?eventId=${eventId}`);
       const data = await res.json();
 
-      let mergedList: any[] = [];
       if (data.success && Array.isArray(data.participants)) {
-        mergedList = [...data.participants];
+        // Filter out any invalid placeholder users
+        const realUsersOnly = data.participants.filter(
+          (p: any) => p.name && !p.name.startsWith('Attendee #')
+        );
+        setPeople(realUsersOnly);
       }
-
-      // Merge with local cache fallback
-      try {
-        const cacheKey = `nexus_global_room_${eventId}`;
-        const localCached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-        localCached.forEach((item: any) => {
-          if (!mergedList.some((m) => m.name === item.name || m.id === item.id)) {
-            mergedList.push({
-              id: item.id || `user-${Date.now()}`,
-              name: item.name,
-              headline: item.headline || 'Event Attendee',
-              avatar_url: item.avatar_url,
-              linkedin_url: item.linkedin_url || `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(item.name)}`,
-              skills: item.skills || ['Networking'],
-              availability: 'available',
-              distance_m: 5,
-              interest_overlap: 2,
-            });
-          }
-        });
-      } catch {}
-
-      setPeople(mergedList);
     } catch (err) {
       console.error('Room sync error:', err);
     } finally {
-      setLastUpdated(new Date());
       setIsLoading(false);
     }
   }, [eventId, user]);
 
-  // Initial sync & auto-refresh every 3 seconds for instant multi-phone updates
+  // Sync on load & poll every 4s
   useEffect(() => {
     syncRoomParticipants();
-    const interval = setInterval(syncRoomParticipants, 3000);
+    const interval = setInterval(syncRoomParticipants, 4000);
 
-    const activeUserId = user?.id || `user-guest-${user?.name ? user.name.toLowerCase().replace(/\s+/g, '-') : 'guest'}`;
+    const activeUserId = user?.id || 'guest-user';
 
-    // Clean exit when tab closes or user leaves room page
     const handleLeaveRoom = () => {
       const leaveUrl = `/api/room?eventId=${eventId}&userId=${encodeURIComponent(activeUserId)}`;
       if (navigator.sendBeacon) {
@@ -133,29 +89,22 @@ export default function NearbyPage() {
     };
   }, [syncRoomParticipants, eventId, user]);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    if (scrollHeight - scrollTop <= clientHeight + 300) {
-      setRenderedLimit((prev) => (prev < people.length ? prev + 50 : prev));
-    }
-  };
-
-  // Open exact typed LinkedIn profile URL in new tab
-  const openLinkedInProfile = (personName: string, linkedinUrl?: string) => {
+  // Open real user's LinkedIn profile in a new tab
+  const handleOpenLinkedIn = (linkedinUrl?: string, name?: string) => {
     let targetUrl = linkedinUrl?.trim();
     if (targetUrl && !targetUrl.startsWith('http')) {
       targetUrl = `https://${targetUrl}`;
     }
-    if (!targetUrl || targetUrl === 'https://www.linkedin.com' || targetUrl.length < 18) {
-      targetUrl = `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(personName)}`;
+    if (!targetUrl || targetUrl.length < 18) {
+      targetUrl = `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(name || 'attendee')}`;
     }
-    toast.success(`Opening ${personName}'s LinkedIn Profile...`);
+    toast.success(`Opening ${name || 'user'}'s official LinkedIn profile...`);
     window.open(targetUrl, '_blank', 'noopener,noreferrer');
   };
 
   const filtered = people.filter((p) => {
-    if (filter === 'matches') return p.interest_overlap > 0;
-    if (filter === 'available') return p.availability === 'available';
+    if (filter === 'verified') return p.is_verified;
+    if (filter === 'looking_for') return p.looking_for?.length > 0;
     return true;
   });
 
@@ -164,13 +113,13 @@ export default function NearbyPage() {
       {/* Event Subheader Navigation */}
       <EventHeaderNav eventId={eventId} eventTitle={`Event Room [${eventId.toUpperCase()}]`} activeCount={people.length} />
 
-      {/* Filter bar */}
+      {/* Filter Toolbar */}
       <div className="bg-background border-b border-border py-2.5 px-4 flex items-center justify-between gap-2">
         <div className="flex gap-1.5 overflow-x-auto">
           {([
-            { key: 'all',       label: `All Joined (${people.length})` },
-            { key: 'matches',   label: `✨ Matches (${people.length})` },
-            { key: 'available', label: '🟢 Available' },
+            { key: 'all',         label: `Real Attendees (${people.length})` },
+            { key: 'verified',    label: '✓ LinkedIn Verified' },
+            { key: 'looking_for', label: '🎯 Looking For' },
           ] as const).map((tab) => (
             <button
               key={tab.key}
@@ -189,24 +138,16 @@ export default function NearbyPage() {
 
         <div className="flex items-center gap-1.5 shrink-0">
           <button
-            onClick={() => setIsIntentModalOpen(true)}
-            className="px-2.5 py-1.5 rounded-lg bg-nexus-indigo/10 text-nexus-indigo border border-nexus-indigo/20 hover:bg-nexus-indigo/20 active:scale-[0.97] transition-all shrink-0 text-2xs font-bold flex items-center gap-1"
-            title="Set your event goal & skills"
-          >
-            My Goal 🎯
-          </button>
-
-          <button
             onClick={async () => {
-              const activeUserId = user?.id || `user-guest-${user?.name ? user.name.toLowerCase().replace(/\s+/g, '-') : 'guest'}`;
-              try {
-                await fetch(`/api/room?eventId=${eventId}&userId=${encodeURIComponent(activeUserId)}`, { method: 'DELETE' });
-              } catch {}
+              if (user?.id) {
+                try {
+                  await fetch(`/api/room?eventId=${eventId}&userId=${encodeURIComponent(user.id)}`, { method: 'DELETE' });
+                } catch {}
+              }
               toast.success('Exited Event Room');
               router.push('/dashboard');
             }}
             className="px-2.5 py-1.5 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 active:scale-[0.97] transition-all shrink-0 text-2xs font-bold flex items-center gap-1"
-            title="Exit Event Room"
           >
             Exit Room 🚪
           </button>
@@ -214,7 +155,6 @@ export default function NearbyPage() {
           <button
             onClick={syncRoomParticipants}
             className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors shrink-0 flex items-center gap-1 text-2xs font-medium"
-            title="Refresh live room attendees"
           >
             <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
             Sync
@@ -222,156 +162,128 @@ export default function NearbyPage() {
         </div>
       </div>
 
-      {/* Main Attendees List */}
-      <div className="flex-1 overflow-y-auto" onScroll={handleScroll}>
+      {/* Main Real Attendees List */}
+      <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
-          <div className="py-20 px-6 text-center space-y-3">
-            <div className="p-3 rounded-full bg-nexus-indigo/10 text-nexus-indigo w-14 h-14 mx-auto flex items-center justify-center">
-              <Users className="h-7 w-7 animate-pulse" />
+          <div className="py-20 px-6 text-center space-y-4 max-w-sm mx-auto">
+            <div className="p-4 rounded-3xl bg-nexus-indigo/10 text-nexus-indigo w-16 h-16 mx-auto flex items-center justify-center border border-nexus-indigo/20">
+              <Users className="h-8 w-8 text-nexus-indigo animate-pulse" />
             </div>
-            <h3 className="font-bold text-base text-foreground">Waiting for people to join...</h3>
-            <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-              Share room code <span className="font-mono font-bold text-nexus-indigo uppercase">{eventId}</span> on other phones & laptops to see everyone live!
+            <h3 className="font-extrabold text-lg text-foreground tracking-tight">No other real attendees yet</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              You are the first person in this room! Invite colleagues or share room code <span className="font-mono font-bold text-nexus-indigo uppercase">{eventId}</span> to connect with real LinkedIn-authenticated professionals.
             </p>
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {filtered.slice(0, renderedLimit).map((person) => (
-              <div key={person.id} className="px-4 py-4 flex items-start gap-3 hover:bg-muted/30 transition-colors">
-                <div className="relative shrink-0">
-                  <Avatar src={person.avatar_url} alt={person.name} size="lg" />
-                  <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-background bg-emerald-500" />
-                </div>
+            {filtered.map((person) => {
+              const isFounder = person.role === 'founder' || person.name === 'Anuj Vardham';
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="text-sm font-bold text-foreground">{person.name}</h3>
-                        <span className="text-2xs px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 font-bold">
-                          Live Now
-                        </span>
+              return (
+                <div key={person.id} className="px-4 py-4 flex items-start gap-3.5 hover:bg-muted/30 transition-colors">
+                  {/* Avatar */}
+                  <div className="relative shrink-0 mt-0.5">
+                    <Avatar src={person.avatar_url} alt={person.name} size="lg" />
+                    <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-background bg-emerald-500" />
+                  </div>
+
+                  {/* Profile Details */}
+                  <div className="flex-1 min-w-0 space-y-2">
+
+                    {/* Name & Badges */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h3 className="text-sm font-extrabold text-foreground tracking-tight">{person.name}</h3>
+
+                          {/* Founder Badge */}
+                          {isFounder && (
+                            <span className="text-2xs px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 font-extrabold border border-amber-500/20 flex items-center gap-1">
+                              <Crown className="h-3 w-3" /> Founder
+                            </span>
+                          )}
+
+                          {/* LinkedIn Verified Badge */}
+                          <span className="text-2xs px-2 py-0.5 rounded-md bg-blue-500/10 text-[#0A66C2] font-extrabold border border-[#0A66C2]/20 flex items-center gap-1">
+                            <ShieldCheck className="h-3 w-3 text-[#0A66C2]" /> LinkedIn Verified
+                          </span>
+                        </div>
+
+                        {/* Headline */}
+                        <p className="text-xs text-foreground/80 font-medium mt-0.5">{person.headline || 'Tech Professional'}</p>
+
+                        {/* Organization / College */}
+                        {person.company && (
+                          <p className="text-2xs text-muted-foreground flex items-center gap-1 mt-0.5 font-semibold">
+                            <Building2 className="h-3 w-3 text-muted-foreground" />
+                            {person.company}
+                          </p>
+                        )}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{person.headline || 'Event Participant'}</p>
 
-                      {/* Display typed LinkedIn link under name */}
-                      {person.linkedin_url && (
-                        <a
-                          href={person.linkedin_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-2xs text-[#0A66C2] font-semibold hover:underline flex items-center gap-1 mt-1 truncate max-w-xs"
-                        >
-                          <Linkedin className="h-3 w-3 shrink-0 fill-[#0A66C2]" />
-                          {person.linkedin_url.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, '@')}
-                        </a>
-                      )}
+                      <span className="text-2xs text-emerald-600 font-bold shrink-0 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        Live in Room
+                      </span>
                     </div>
 
-                    <span className="text-2xs text-muted-foreground shrink-0 flex items-center gap-0.5">
-                      <MapPin className="h-2.5 w-2.5" />
-                      In Room
-                    </span>
-                  </div>
+                    {/* "Looking For" Badges */}
+                    {person.looking_for?.length > 0 && (
+                      <div className="space-y-1">
+                        <span className="text-2xs font-extrabold tracking-wider uppercase text-nexus-indigo">Looking For:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {person.looking_for.map((goal: string) => (
+                            <span key={goal} className="text-2xs px-2.5 py-0.5 rounded-lg bg-nexus-indigo/10 text-nexus-indigo font-bold border border-nexus-indigo/20">
+                              {goal}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
-                  {/* Skills */}
-                  {person.skills?.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {person.skills.map((s: string) => (
-                        <span key={s} className="text-2xs px-1.5 py-0.5 rounded-md bg-background border border-border text-muted-foreground">
-                          {s}
-                        </span>
-                      ))}
+                    {/* Skills & Interests */}
+                    {person.skills?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {person.skills.map((s: string) => (
+                          <span key={s} className="text-2xs px-2 py-0.5 rounded-md bg-muted text-muted-foreground font-medium border border-border">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Action Buttons: View Real LinkedIn Profile & Chat */}
+                    <div className="pt-2 flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenLinkedIn(person.linkedin_url, person.name)}
+                        className="flex-1 h-10 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 bg-[#0A66C2] hover:bg-[#084e96] text-white active:scale-[0.98] transition-all shadow-md shadow-[#0A66C2]/20"
+                      >
+                        <Linkedin className="h-4 w-4 fill-white shrink-0" />
+                        View LinkedIn Profile ↗
+                      </button>
+
+                      <button
+                        onClick={() => setActiveChatRecipient(person)}
+                        className="flex-1 h-10 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 bg-nexus-indigo/10 hover:bg-nexus-indigo/20 text-nexus-indigo border border-nexus-indigo/30 active:scale-[0.98] transition-all shrink-0"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Chat In-App
+                      </button>
                     </div>
-                  )}
 
-                  {/* Action Buttons — In-App Profile & Chat (0 External App Switch) */}
-                  <div className="mt-3 flex items-center gap-2">
-                    <button
-                      onClick={() => setSelectedProfile(person)}
-                      className="flex-1 h-9.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 bg-[#0A66C2] hover:bg-[#084e96] text-white active:scale-[0.97] transition-all shadow-md shadow-[#0A66C2]/20 shrink-0"
-                    >
-                      <Linkedin className="h-4 w-4 fill-white shrink-0" />
-                      View Verified Badge 👤
-                    </button>
-
-                    <button
-                      onClick={() => setActiveChatRecipient(person)}
-                      className="flex-1 h-9.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 bg-nexus-indigo/10 hover:bg-nexus-indigo/20 text-nexus-indigo border border-nexus-indigo/30 active:scale-[0.97] transition-all shrink-0"
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      Chat
-                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* 1-on-1 Chat Drawer */}
+      {/* 1-on-1 In-App Direct Chat */}
       <DirectChatDrawer
         isOpen={Boolean(activeChatRecipient)}
         onClose={() => setActiveChatRecipient(null)}
         recipient={activeChatRecipient}
       />
-
-      {/* Networking Goal & Intent Modal ("Why are you here?") */}
-      <AttendeeIntentModal
-        isOpen={isIntentModalOpen}
-        onClose={() => setIsIntentModalOpen(false)}
-        onSave={(intent, skills) => {
-          if (user) {
-            (user as any).headline = intent;
-            (user as any).skills = skills;
-          }
-          syncRoomParticipants();
-        }}
-      />
-
-      {/* In-App Attendee Profile Badge Drawer (0 External App Switches) */}
-      {selectedProfile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-sm bg-background rounded-3xl border border-border p-6 shadow-2xl space-y-4 text-center">
-            <Avatar src={selectedProfile.avatar_url} alt={selectedProfile.name} size="xl" className="mx-auto" />
-            <div>
-              <h3 className="text-lg font-bold text-foreground">{selectedProfile.name}</h3>
-              <p className="text-xs text-nexus-indigo font-bold mt-0.5">{selectedProfile.headline}</p>
-              <p className="text-2xs text-muted-foreground mt-1 font-mono">{selectedProfile.linkedin_url}</p>
-            </div>
-
-            {selectedProfile.skills?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 justify-center pt-2">
-                {selectedProfile.skills.map((s: string) => (
-                  <span key={s} className="text-2xs px-2.5 py-1 rounded-full bg-muted border border-border text-muted-foreground font-semibold">
-                    {s}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={() => {
-                  setActiveChatRecipient(selectedProfile);
-                  setSelectedProfile(null);
-                }}
-                className="flex-1 h-11 rounded-xl bg-nexus-indigo text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md"
-              >
-                <MessageSquare className="h-4 w-4" /> Start In-App Chat
-              </button>
-
-              <button
-                onClick={() => setSelectedProfile(null)}
-                className="h-11 px-4 rounded-xl bg-muted text-muted-foreground hover:text-foreground font-semibold text-xs"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

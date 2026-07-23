@@ -1,7 +1,7 @@
 // ===================================================================
 // Auth Callback Route Handler — Official Supabase & LinkedIn OAuth Code Exchange
-// LinkedIn/Supabase redirects here after official LinkedIn authentication completes.
-// Exchanges authorization code for an authenticated session & redirects to the app.
+// Exchanges authorization code for an authenticated session.
+// First-time users redirect to /onboarding; returning users redirect to event/dashboard.
 // ===================================================================
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -24,7 +24,23 @@ export async function GET(request: Request) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (!error) {
-        // Authenticated session established & session cookies set via SSR
+        // Check if user has completed onboarding
+        const { data: { user: sbUser } } = await supabase.auth.getUser();
+
+        if (sbUser) {
+          const { data: prefs } = await supabase
+            .from('user_preferences')
+            .select('onboarding_done')
+            .eq('user_id', sbUser.id)
+            .single();
+
+          // First-time login — send directly to /onboarding
+          if (!prefs?.onboarding_done) {
+            return NextResponse.redirect(`${baseOrigin}/onboarding`);
+          }
+        }
+
+        // Returning user — send to destination room / dashboard
         return NextResponse.redirect(`${baseOrigin}${next}`);
       } else {
         console.error('Supabase OAuth exchangeCodeForSession error:', error);
@@ -33,7 +49,6 @@ export async function GET(request: Request) {
       console.error('Auth callback error:', err);
     }
 
-    // Direct successful entry to application dashboard
     return NextResponse.redirect(`${baseOrigin}${next}`);
   }
 

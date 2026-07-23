@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 // Global room store across warm serverless instances
 const globalRoomStore: Record<string, Map<string, any>> = {};
 
-// Inactivity threshold: 15 seconds without a heartbeat = user left room
-const PRESENCE_TIMEOUT_MS = 15_000;
+// Inactivity threshold: 25 seconds without a heartbeat = user left room
+const PRESENCE_TIMEOUT_MS = 25_000;
 
 function getSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   const now = Date.now();
   const roomMap = globalRoomStore[eventId];
 
-  // Clean up users who left or haven't sent a heartbeat in 15s
+  // Clean up users who left or haven't sent a heartbeat in 25s
   for (const [userId, participant] of roomMap.entries()) {
     if (now - (participant.lastActiveAt || 0) > PRESENCE_TIMEOUT_MS) {
       roomMap.delete(userId);
@@ -43,8 +43,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { eventId: rawEventId, user } = body;
 
-    if (!user || !user.name) {
-      return NextResponse.json({ success: false, error: 'User data missing' }, { status: 400 });
+    if (!user || !user.name || user.name.startsWith('Attendee #')) {
+      return NextResponse.json({ success: false, error: 'Real authenticated user required' }, { status: 400 });
     }
 
     const eventId = (rawEventId || 'demo-1').toLowerCase();
@@ -56,24 +56,27 @@ export async function POST(request: Request) {
       ? user.linkedin_url.trim()
       : user.linkedin_url?.trim()
       ? `https://${user.linkedin_url.trim()}`
-      : `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(user.name)}`;
+      : 'https://www.linkedin.com';
 
     const userId = user.id || `user-${user.name.toLowerCase().replace(/\s+/g, '-')}`;
 
     const participant = {
       id: userId,
       name: user.name.trim(),
-      headline: user.headline?.trim() || 'Event Attendee',
+      headline: user.headline?.trim() || 'Tech Professional',
+      company: user.company?.trim() || 'Tech Network',
       avatar_url: user.avatar_url || null,
       linkedin_url: formattedLinkedin,
-      skills: user.skills || ['Networking', 'Tech'],
-      availability: 'available',
-      distance_m: Math.floor(Math.random() * 20) + 2,
-      interest_overlap: 2,
+      skills: user.skills || [],
+      interests: user.interests || [],
+      looking_for: user.looking_for || ['Networking'],
+      bio: user.bio || null,
+      role: user.role || 'attendee',
+      is_verified: true,
       lastActiveAt: Date.now(),
     };
 
-    // Upsert user into active room map with updated timestamp
+    // Upsert real user into active room map
     globalRoomStore[eventId].set(userId, participant);
 
     // Save to Supabase DB if available
@@ -84,8 +87,12 @@ export async function POST(request: Request) {
           id: userId,
           name: participant.name,
           headline: participant.headline,
+          company: participant.company,
+          avatar_url: participant.avatar_url,
           linkedin_url: participant.linkedin_url,
           skills: participant.skills,
+          role: participant.role,
+          is_verified: true,
         }, { onConflict: 'id' });
 
         await supabase.from('event_participants').upsert({
