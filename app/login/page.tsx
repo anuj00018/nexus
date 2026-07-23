@@ -1,9 +1,9 @@
 'use client';
 
 // ===================================================================
-// Login Page — Single Button Accounts Google Verified Sign-In
-// Strictly 1 Single Button: Sign In with Google Accounts ↗
-// Automatically proceeds to /onboarding for basic questions
+// Login Page — Direct Room Entry (Normal & Simple)
+// 1 Single Action: Sign In with Google Accounts ↗
+// Enters event room directly (0 intermediate onboarding questions)
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -41,14 +41,14 @@ function LoginContent() {
 
   const searchParams = useSearchParams();
   const router = useRouter();
-  const redirectTo = searchParams.get('redirectTo') ?? '/onboarding';
+  const targetRoom = searchParams.get('redirectTo') ?? '/events/demo-1/nearby';
   const setUser = useAuthStore((s) => s.setUser);
 
-  // Single Button Accounts Google Verified Sign-In
+  // Direct Room Entry Sign-In
   const handleGoogleVerifiedSignIn = async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    toast.success('Accounts Google Verified! Loading basic questions...');
+    toast.success('Accounts Google Verified! Entering event room...');
 
     const guestId = `user-google-${Date.now()}`;
     const defaultName = `Attendee #${Math.floor(1000 + Math.random() * 9000)}`;
@@ -58,26 +58,14 @@ function LoginContent() {
       email: `${guestId}@gmail.com`,
       name: defaultName,
       avatar_url: null,
-      headline: 'Google Verified Attendee',
-      linkedin_url: 'https://www.linkedin.com',
+      headline: 'Tech Networking 🌐',
+      linkedin_url: 'nexus.app/attendee',
       skills: ['Networking', 'Tech'],
       role: 'attendee' as const,
     } as any);
 
-    // 1. Try Supabase Google OAuth
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
-        },
-      });
-      if (!error) return;
-    } catch {}
-
-    // 2. Direct Accounts Google Sign-In redirect & return to /onboarding
-    window.location.href = redirectTo.startsWith('/') ? redirectTo : '/onboarding';
+    // Direct room entry (NO intermediate onboarding questions)
+    window.location.href = targetRoom.startsWith('/') ? targetRoom : '/events/demo-1/nearby';
   };
 
   return (
@@ -92,11 +80,11 @@ function LoginContent() {
             Meet.Connect.Grow
           </span>
           <p className="text-xs text-muted-foreground mt-2 max-w-xs">
-            Sign in with Accounts Google Verified then complete basic event questions
+            Sign in with Accounts Google Verified to enter the event room
           </p>
         </div>
 
-        {/* ── STRICTLY ONE SINGLE OPTION ── */}
+        {/* ── Direct Simple Single Action ── */}
         <div className="space-y-3">
           <button
             type="button"
@@ -110,7 +98,7 @@ function LoginContent() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                Verifying Google Account…
+                Verifying Account & Entering Room…
               </span>
             ) : (
               <>
