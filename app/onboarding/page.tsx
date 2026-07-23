@@ -63,6 +63,8 @@ export default function OnboardingPage() {
   const [selectedIntent, setSelectedIntent] = useState<string>('hackathon');
   const [selectedSkills, setSelectedSkills] = useState<string[]>(['AI / ML', 'React']);
   const [customSkillInput, setCustomSkillInput] = useState<string>('');
+  const [fullName, setFullName] = useState<string>(user?.name || '');
+  const [linkedinUrl, setLinkedinUrl] = useState<string>(user?.linkedin_url || '');
   const [isLoading, setIsLoading] = useState(false);
 
   const toggleSkill = (skill: string) => {
@@ -89,10 +91,19 @@ export default function OnboardingPage() {
     const chosenObj = WHY_HERE_OPTIONS.find((i) => i.id === selectedIntent);
     const intentTitle = chosenObj ? chosenObj.title : 'Tech Networking 🌐';
 
+    const updatedName = fullName.trim() || user?.name || `Attendee #${Math.floor(1000 + Math.random() * 9000)}`;
+    const updatedLinkedin = linkedinUrl.trim().startsWith('http')
+      ? linkedinUrl.trim()
+      : linkedinUrl.trim()
+      ? `https://${linkedinUrl.trim()}`
+      : user?.linkedin_url || 'https://www.linkedin.com';
+
     if (user) {
       setUser({
         ...user,
+        name: updatedName,
         headline: intentTitle,
+        linkedin_url: updatedLinkedin,
         skills: selectedSkills,
       } as any);
     }
@@ -204,6 +215,29 @@ export default function OnboardingPage() {
             value={customSkillInput}
             onChange={(e) => setCustomSkillInput(e.target.value)}
             onKeyDown={handleAddCustomSkill}
+            className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-nexus-indigo"
+          />
+        </div>
+
+        {/* ── 3. Verified Name & LinkedIn Profile Link ──────────────────────────── */}
+        <div className="space-y-2.5">
+          <label className="block text-2xs font-extrabold tracking-wider uppercase text-nexus-indigo">
+            3. Your Verified Badge Information
+          </label>
+
+          <input
+            type="text"
+            placeholder="Full Name (e.g. Anuj Vardham)"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-nexus-indigo"
+          />
+
+          <input
+            type="text"
+            placeholder="LinkedIn Profile URL (e.g. https://www.linkedin.com/in/your-name)"
+            value={linkedinUrl}
+            onChange={(e) => setLinkedinUrl(e.target.value)}
             className="w-full h-10 px-3.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-nexus-indigo"
           />
         </div>

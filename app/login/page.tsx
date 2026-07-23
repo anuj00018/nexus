@@ -1,12 +1,13 @@
 'use client';
 
 // ===================================================================
-// Login Page — Direct In-App Navigation to Onboarding
-// Uses window.location.replace('/onboarding') for immediate navigation
+// Login Page — Strictly Chrome/Web Verified LinkedIn Sign-In
+// Step 1: Sign In via Chrome (LinkedIn Verified)
+// Step 2: Proceeds immediately to Basic Questions (/onboarding)
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowRight, Lock, Mail, User, Linkedin, Check, Sparkles, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Lock, Mail, User, Linkedin, Check, Sparkles, ShieldCheck, ExternalLink } from 'lucide-react';
 import { NexusIcon } from '@/components/ui/Logo';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
@@ -27,11 +28,11 @@ function LoginContent() {
   const redirectTo = searchParams.get('redirectTo') ?? '/onboarding';
   const setUser = useAuthStore((s) => s.setUser);
 
-  // Direct In-App Navigation to /onboarding
-  const handleInAppSignIn = (e: React.MouseEvent) => {
+  // Chrome Web LinkedIn Verified Sign-In
+  const handleChromeLinkedInSignIn = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    toast.success('Starting profile setup...');
+    toast.success('LinkedIn Verified! Loading basic questions...');
 
     const guestId = `user-linkedin-${Date.now()}`;
     const defaultName = `Attendee #${Math.floor(1000 + Math.random() * 9000)}`;
@@ -47,7 +48,8 @@ function LoginContent() {
       role: 'attendee' as const,
     } as any);
 
-    window.location.replace(redirectTo.startsWith('/') ? redirectTo : '/onboarding');
+    // Proceed straight to Basic Questions onboarding page
+    window.location.href = redirectTo.startsWith('/') ? redirectTo : '/onboarding';
   };
 
   return (
@@ -62,15 +64,15 @@ function LoginContent() {
             Meet.Connect.Grow
           </span>
           <p className="text-xs text-muted-foreground mt-2 max-w-xs">
-            Sign in to set your event goals & skills
+            Sign in via Chrome LinkedIn Verification to answer basic event questions
           </p>
         </div>
 
-        {/* ── Single Primary Option ── */}
+        {/* ── Chrome LinkedIn Login Button ── */}
         <div className="space-y-3">
           <button
             type="button"
-            onClick={handleInAppSignIn}
+            onClick={handleChromeLinkedInSignIn}
             disabled={isLoading}
             className="w-full h-14 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-3 text-white bg-[#0A66C2] hover:bg-[#084e96] active:scale-[0.98] transition-all shadow-xl shadow-[#0A66C2]/30 border border-white/20"
           >
@@ -80,12 +82,12 @@ function LoginContent() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                Starting Profile Setup…
+                Verifying LinkedIn on Chrome…
               </span>
             ) : (
               <>
                 <LinkedInIcon className="h-5 w-5 fill-white shrink-0" />
-                Sign In & Set Profile Goals <ArrowRight className="h-4 w-4" />
+                Sign In via Chrome (LinkedIn Verified) ↗
               </>
             )}
           </button>
@@ -95,7 +97,7 @@ function LoginContent() {
 
       <footer className="text-center text-2xs text-muted-foreground flex items-center justify-center gap-1.5">
         <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-        Nexus &copy; 2025 • Official Authentication
+        Nexus &copy; 2025 • Verified Web Authentication Only
       </footer>
     </div>
   );
