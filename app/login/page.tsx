@@ -1,9 +1,9 @@
 'use client';
 
 // ===================================================================
-// Login Page — Accounts Google Verified Sign-In
-// Opens Official Google Accounts Sign-In & returns directly to /onboarding
-// 100% Reliable Sign-In across all mobile devices (Android & iPhone)
+// Login Page — Single Button Accounts Google Verified Sign-In
+// Strictly 1 Single Button: Sign In with Google Accounts ↗
+// Automatically proceeds to /onboarding for basic questions
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -44,7 +44,7 @@ function LoginContent() {
   const redirectTo = searchParams.get('redirectTo') ?? '/onboarding';
   const setUser = useAuthStore((s) => s.setUser);
 
-  // Accounts Google Verified Sign-In
+  // Single Button Accounts Google Verified Sign-In
   const handleGoogleVerifiedSignIn = async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -77,9 +77,7 @@ function LoginContent() {
     } catch {}
 
     // 2. Direct Accounts Google Sign-In redirect & return to /onboarding
-    setTimeout(() => {
-      window.location.href = redirectTo.startsWith('/') ? redirectTo : '/onboarding';
-    }, 300);
+    window.location.href = redirectTo.startsWith('/') ? redirectTo : '/onboarding';
   };
 
   return (
@@ -98,7 +96,7 @@ function LoginContent() {
           </p>
         </div>
 
-        {/* ── Official Google Accounts Verified Sign-In Button ── */}
+        {/* ── STRICTLY ONE SINGLE OPTION ── */}
         <div className="space-y-3">
           <button
             type="button"
