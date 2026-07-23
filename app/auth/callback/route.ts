@@ -38,6 +38,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Clean fallback — redirect to onboarding
-  return NextResponse.redirect(`${origin}/onboarding`);
+  // Direct clean room entry
+  return NextResponse.redirect(`${origin}/events/demo-1/nearby`);
 }

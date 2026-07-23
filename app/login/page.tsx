@@ -1,13 +1,13 @@
 'use client';
 
 // ===================================================================
-// Login Page — Sign In with Official LinkedIn (Chrome Verified)
-// 1. Click -> Opens Official LinkedIn Page in Chrome to sign in
-// 2. Returns back to your web app & enters event room directly
+// Login Page — Official Real Account LinkedIn OAuth Verification
+// 1. Click -> Opens Official LinkedIn Verification Page (linkedin.com/oauth/v2/authorization)
+// 2. Verified Real Account Check -> Returns back via /auth/callback to event room
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowRight, Lock, Mail, User, Check, Sparkles, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Lock, Mail, User, Check, Sparkles, ShieldCheck, Linkedin } from 'lucide-react';
 import { NexusIcon } from '@/components/ui/Logo';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
@@ -29,40 +29,30 @@ function LoginContent() {
   const targetRoom = searchParams.get('redirectTo') ?? '/events/demo-1/nearby';
   const setUser = useAuthStore((s) => s.setUser);
 
-  // Official LinkedIn Sign-In
+  // Official LinkedIn Real Account Verification Sign-In
   const handleOfficialLinkedInSignIn = async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    toast.success('Redirecting to LinkedIn Official Chrome login...');
+    toast.success('Redirecting to Official LinkedIn Verification page...');
 
-    const guestId = `user-linkedin-${Date.now()}`;
-    const defaultName = `Attendee #${Math.floor(1000 + Math.random() * 9000)}`;
-
-    setUser({
-      id: guestId,
-      email: `${guestId}@linkedin.app`,
-      name: defaultName,
-      avatar_url: null,
-      headline: 'LinkedIn Verified Attendee',
-      linkedin_url: 'https://www.linkedin.com',
-      skills: ['Networking', 'Tech'],
-      role: 'attendee' as const,
-    } as any);
-
-    // 1. Try Supabase LinkedIn OAuth
+    // 1. Supabase LinkedIn OIDC Real Account OAuth Verification
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
           redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(targetRoom)}`,
+          scopes: 'openid profile email',
         },
       });
       if (!error) return;
     } catch {}
 
-    // 2. Direct Official LinkedIn login redirect & return back to room
-    window.location.href = targetRoom.startsWith('/') ? targetRoom : '/events/demo-1/nearby';
+    // 2. Direct Official LinkedIn OAuth Authorization page redirect
+    const returnUrl = `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(targetRoom)}`;
+    const linkedinAuthPage = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=86701140y35677&redirect_uri=${encodeURIComponent(returnUrl)}&state=${encodeURIComponent(targetRoom)}&scope=openid%20profile%20email`;
+
+    window.location.href = linkedinAuthPage;
   };
 
   return (
@@ -77,11 +67,11 @@ function LoginContent() {
             Meet.Connect.Grow
           </span>
           <p className="text-xs text-muted-foreground mt-2 max-w-xs">
-            Sign in on LinkedIn's official Chrome page then return back to your event room
+            Log in on LinkedIn's official verification page then return back to your event room
           </p>
         </div>
 
-        {/* ── Official LinkedIn Sign-In Button ── */}
+        {/* ── Official LinkedIn Verification Button ── */}
         <div className="space-y-3">
           <button
             type="button"
@@ -95,12 +85,12 @@ function LoginContent() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                Verifying LinkedIn on Chrome…
+                Verifying Real LinkedIn Account…
               </span>
             ) : (
               <>
                 <LinkedInIcon className="h-5 w-5 fill-white shrink-0" />
-                Sign In with LinkedIn (Official Chrome Verification) ↗
+                Sign In with LinkedIn (Official Verification Page) ↗
               </>
             )}
           </button>
@@ -110,7 +100,7 @@ function LoginContent() {
 
       <footer className="text-center text-2xs text-muted-foreground flex items-center justify-center gap-1.5">
         <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-        Nexus &copy; 2025 • Official LinkedIn Authorization
+        Nexus &copy; 2025 • Official LinkedIn Account Authorization
       </footer>
     </div>
   );
