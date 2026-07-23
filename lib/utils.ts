@@ -208,3 +208,19 @@ export function titleCase(str: string): string {
 export function stripTrailingSlash(url: string): string {
   return url.endsWith('/') ? url.slice(0, -1) : url;
 }
+
+/**
+ * Safely resolve the application base URL for development and production.
+ */
+export function getAppBaseUrl(): string {
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return window.location.origin;
+  }
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return stripTrailingSlash(process.env.NEXT_PUBLIC_APP_URL);
+  }
+  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+  }
+  return 'https://join-nexus1.vercel.app';
+}

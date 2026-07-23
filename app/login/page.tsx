@@ -10,6 +10,7 @@ import { useSearchParams } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
 import { NexusIcon } from '@/components/ui/Logo';
 import { createClient } from '@/lib/supabase/client';
+import { getAppBaseUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 function LinkedInIcon({ className }: { className?: string }) {
@@ -40,7 +41,8 @@ function LoginContent() {
 
     try {
       const supabase = createClient();
-      const callbackUrl = `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
+      const baseUrl = getAppBaseUrl();
+      const callbackUrl = `${baseUrl}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
