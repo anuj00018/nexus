@@ -5,10 +5,11 @@
 // Strictly aligned with Root Page startup aesthetics
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
 import { NexusIcon } from '@/components/ui/Logo';
 import { createClient } from '@/lib/supabase/client';
+import { useAuthStore } from '@/store/authStore';
 import { getAppBaseUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
@@ -21,9 +22,18 @@ function LinkedInIcon({ className }: { className?: string }) {
 }
 
 function LoginContent() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
+
+  // Persistent Auth Session Auto-Redirect
+  useEffect(() => {
+    if (user?.id) {
+      router.replace('/dashboard');
+    }
+  }, [user, router]);
 
   useEffect(() => {
     const errorParam = searchParams.get('error');

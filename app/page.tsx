@@ -11,10 +11,12 @@
 // 6. Clean Minimal Footer
 // Zero demo previews, zero fake cards, zero pre-auth event codes.
 // ===================================================================
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
 import { NexusIcon } from '@/components/ui/Logo';
 import { createClient } from '@/lib/supabase/client';
+import { useAuthStore } from '@/store/authStore';
 import { getAppBaseUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
@@ -27,7 +29,16 @@ function LinkedInIcon({ className }: { className?: string }) {
 }
 
 export default function RootPage() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Persistent Auth Session Auto-Redirect
+  useEffect(() => {
+    if (user?.id) {
+      router.replace('/dashboard');
+    }
+  }, [user, router]);
 
   const handleLinkedInOAuth = async (e: React.MouseEvent) => {
     e.preventDefault();
