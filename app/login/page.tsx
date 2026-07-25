@@ -1,9 +1,8 @@
 'use client';
 
 // ===================================================================
-// Nexus Login Page — Standard Production Official LinkedIn OAuth 2.0
-// Single Primary Action: Continue with LinkedIn
-// Redirects directly to official LinkedIn login page
+// Nexus Login Page — Single Action Official LinkedIn OAuth
+// Strictly aligned with Root Page startup aesthetics
 // ===================================================================
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -24,7 +23,7 @@ function LinkedInIcon({ className }: { className?: string }) {
 function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirectTo') ?? '/events/demo-1/nearby';
+  const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
 
   useEffect(() => {
     const errorParam = searchParams.get('error');
@@ -33,16 +32,16 @@ function LoginContent() {
     }
   }, [searchParams]);
 
-  // Standard Official OAuth Flow with LinkedIn
   const handleLinkedInOAuth = async (e: React.MouseEvent) => {
     e.preventDefault();
+    if (isLoading) return;
+
     setIsLoading(true);
     toast.loading('Redirecting to official LinkedIn login...');
 
     const baseUrl = getAppBaseUrl();
     const callbackUrl = `${baseUrl}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
 
-    // 1. Try Supabase Auth LinkedIn OIDC OAuth
     try {
       const supabase = createClient();
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -59,7 +58,6 @@ function LoginContent() {
       }
     } catch {}
 
-    // 2. Direct LinkedIn Official OAuth Authorization URL (Self-contained 100% reliable redirect)
     const linkedinClientId = process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID || '777xz1u7vj58kf';
     const redirectUri = `${baseUrl}/auth/callback`;
     const directLinkedInUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${linkedinClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(redirectTo)}&scope=openid%20profile%20email`;
@@ -68,23 +66,32 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-between px-5 py-8">
-      <div className="w-full max-w-sm mx-auto my-auto space-y-6">
+    <div className="min-h-screen bg-background flex flex-col justify-between p-6 sm:p-10 select-none">
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-nexus-indigo/15 rounded-full blur-[130px]" />
+      </div>
 
-        {/* Logo Header */}
-        <div className="flex flex-col items-center text-center">
-          <NexusIcon size={64} className="mb-3" />
-          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Nexus</h1>
-          <span className="text-2xs font-extrabold tracking-widest uppercase text-nexus-indigo mt-0.5">
-            Meet.Connect.Grow
-          </span>
-          <p className="text-xs text-muted-foreground mt-2 max-w-xs">
-            Sign in with your official LinkedIn account to access Nexus
+      <main className="relative z-10 w-full max-w-md mx-auto my-auto text-center space-y-8 animate-fade-in">
+        <div className="flex flex-col items-center gap-3">
+          <NexusIcon size={64} className="shadow-lg shadow-nexus-indigo/20 rounded-2xl" />
+          <div className="space-y-1">
+            <h2 className="text-2xl font-black tracking-tight text-foreground">Nexus</h2>
+            <span className="text-2xs font-extrabold tracking-widest uppercase text-nexus-indigo block">
+              Meet.Connect.Grow
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight leading-tight">
+            Never miss the <span className="bg-gradient-to-r from-nexus-indigo via-purple-500 to-[#0A66C2] bg-clip-text text-transparent">right connection</span> at tech events.
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+            Discover real attendees in your room and connect on LinkedIn in one tap.
           </p>
         </div>
 
-        {/* ── Single Production Action: Continue with LinkedIn ── */}
-        <div className="space-y-3">
+        <div className="space-y-4 pt-2">
           <button
             type="button"
             onClick={handleLinkedInOAuth}
@@ -106,13 +113,16 @@ function LoginContent() {
               </>
             )}
           </button>
+
+          <div className="inline-flex items-center gap-1.5 text-2xs text-muted-foreground font-semibold px-3 py-1 rounded-full bg-muted/60 border border-border/80">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+            Official LinkedIn OAuth 2.0 Verified
+          </div>
         </div>
+      </main>
 
-      </div>
-
-      <footer className="text-center text-2xs text-muted-foreground flex items-center justify-center gap-1.5">
-        <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-        Nexus &copy; 2025 • Official LinkedIn OAuth 2.0 Authentication
+      <footer className="relative z-10 text-center text-2xs text-muted-foreground pt-6">
+        Nexus &copy; 2025 • Official Verified LinkedIn Event Networking Platform
       </footer>
     </div>
   );

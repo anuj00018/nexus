@@ -140,11 +140,11 @@ export default function OnboardingPage() {
         console.error('Supabase DB save warning:', dbErr);
       }
 
-      toast.success('🎉 Profile saved! Entering event room...');
+      toast.success('🎉 Profile saved! Redirecting to Dashboard...');
 
-      // 3. Immediate fail-safe redirection to event room
+      // 3. Immediate fail-safe redirection to Dashboard
       setTimeout(() => {
-        window.location.href = '/events/demo-1/nearby';
+        window.location.href = '/dashboard';
       }, 300);
 
     } catch (err: any) {
@@ -306,7 +306,7 @@ export default function OnboardingPage() {
               </span>
             ) : (
               <>
-                Save Profile & Enter Event Room <ArrowRight className="h-4 w-4" />
+                Save Profile & Go to Dashboard <ArrowRight className="h-4 w-4" />
               </>
             )}
           </button>
