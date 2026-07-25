@@ -36,12 +36,14 @@ export interface User {
   email: string;
   name: string;
   avatar_url: Nullable<string>;
-  headline: Nullable<string>;       // e.g. "Software Engineer at Google"
+  headline?: Nullable<string>;       // e.g. "Software Engineer at Google"
   company: Nullable<string>;        // Current company or college
   linkedin_url: Nullable<string>;   // LinkedIn profile URL
-  github_url: Nullable<string>;     // Optional
-  portfolio_url: Nullable<string>;  // Optional
-  bio: Nullable<string>;
+  github_url?: Nullable<string>;     // Optional
+  portfolio_url?: Nullable<string>;  // Optional
+  bio?: Nullable<string>;
+  looking_for?: string[];
+  interests?: string[];
   role: UserRole;
   is_verified: boolean;
   created_at: string;
