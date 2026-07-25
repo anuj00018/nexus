@@ -137,19 +137,6 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* LinkedIn Profile Button */}
-          <div className="border-t border-border/60 pt-4">
-            <a
-              href={user.linkedin_url || 'https://www.linkedin.com'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full h-11 rounded-xl bg-[#0A66C2] text-white font-extrabold text-xs flex items-center justify-center gap-2 hover:bg-[#084e96] active:scale-[0.98] transition-all shadow-md shadow-[#0A66C2]/20"
-            >
-              <Linkedin className="h-4 w-4 fill-white" />
-              View Verified LinkedIn Profile ↗
-            </a>
-          </div>
-
         </div>
 
         {/* ── Statistics Cards Grid ─────────────────────────────────── */}

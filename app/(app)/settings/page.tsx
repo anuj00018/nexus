@@ -1,10 +1,9 @@
 'use client';
 
 // ===================================================================
-// Settings Page — Clean Production Preferences
-// Displays only useful system settings: Privacy, Notifications, Theme.
-// Founder Controls & Rating Inbox are strictly hidden from normal users
-// and accessible ONLY by Founder via password-protected /admin portal.
+// Settings Page — Clean Preferences & Small Neat Founder Mention
+// Displays useful account preferences, small neat Founder & Nexus
+// LinkedIn links, and password-protected Founder Inbox for Anuj.
 // ===================================================================
 import { useAuthStore } from '@/store/authStore';
 import { createClient } from '@/lib/supabase/client';
@@ -40,7 +39,7 @@ export default function SettingsPage() {
           <p className="text-xs text-muted-foreground">Manage your account preferences and privacy</p>
         </div>
 
-        {/* Preferences Section */}
+        {/* Account Preferences Section */}
         <div className="rounded-3xl border border-border/80 bg-background/90 overflow-hidden shadow-sm backdrop-blur-md">
           <div className="px-4 py-3 border-b border-border/60 bg-muted/20">
             <p className="text-2xs font-extrabold text-nexus-indigo uppercase tracking-wider">Account Preferences</p>
@@ -70,25 +69,40 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* About Section */}
+        {/* About & Small Neat Founder Section */}
         <div className="rounded-3xl border border-border/80 bg-background/90 overflow-hidden shadow-sm backdrop-blur-md">
           <div className="px-4 py-3 border-b border-border/60 bg-muted/20">
             <p className="text-2xs font-extrabold text-nexus-indigo uppercase tracking-wider">About Application</p>
           </div>
-          <div className="px-4 py-4 space-y-2 text-xs">
+          <div className="px-4 py-4 space-y-3 text-xs">
             <div className="flex justify-between items-center text-foreground font-semibold">
               <span>Nexus Platform</span>
               <span className="font-mono text-2xs px-2 py-0.5 rounded bg-muted">v1.0.0</span>
             </div>
-            <p className="text-muted-foreground">Meet.Connect.Grow · Real-Time Event Networking Platform</p>
-            <a
-              href="https://www.linkedin.com/company/join-nexus1"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[#0A66C2] font-bold hover:underline pt-1"
-            >
-              Follow Nexus on LinkedIn <ExternalLink className="h-3 w-3" />
-            </a>
+            <p className="text-muted-foreground leading-relaxed">
+              Meet.Connect.Grow · Real-Time Event Networking Platform
+            </p>
+
+            {/* Small Neat Founder & Nexus LinkedIn Links */}
+            <div className="pt-2.5 border-t border-border/50 flex flex-wrap items-center gap-3 text-2xs font-semibold">
+              <a
+                href="https://www.linkedin.com/in/anuj-vardham-b399253a1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[#0A66C2] hover:underline"
+              >
+                Founder: Anuj Vardham ↗
+              </a>
+              <span className="text-muted-foreground/60">•</span>
+              <a
+                href="https://www.linkedin.com/company/join-nexus1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[#0A66C2] hover:underline"
+              >
+                Nexus Company Page ↗
+              </a>
+            </div>
           </div>
         </div>
 
