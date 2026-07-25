@@ -22,11 +22,21 @@ export default function SettingsPage() {
     user?.name?.toLowerCase().includes('anuj');
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.warn('Sign out warning:', e);
+    }
     clearUser();
+    try {
+      localStorage.removeItem('nexus-auth');
+      sessionStorage.clear();
+    } catch {}
     toast.success('Signed out successfully');
-    router.push('/login');
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 100);
   };
 
   return (

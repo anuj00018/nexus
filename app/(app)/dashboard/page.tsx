@@ -19,23 +19,10 @@ import { ROUTES } from '@/constants';
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [createdCodes, setCreatedCodes] = useState<any[]>([]);
 
   const firstName = user?.name?.split(' ')[0] ?? 'Professional';
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-
-  useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('nexus_created_codes') || '{}');
-      const list = Object.entries(stored).map(([code, meta]: [string, any]) => ({
-        code,
-        title: meta.title || `Event [${code}]`,
-        createdAt: meta.createdAt,
-      }));
-      setCreatedCodes(list.slice(0, 3));
-    } catch {}
-  }, []);
 
   return (
     <div className="flex-1 overflow-y-auto pb-20 md:pb-8">
@@ -174,37 +161,6 @@ export default function DashboardPage() {
               );
             })}
           </div>
-        </div>
-
-        {/* ── 4. Recent Event Rooms / Created Codes ──────────────── */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-extrabold tracking-wider uppercase text-nexus-indigo">
-            Active & Created Events
-          </h3>
-
-          {createdCodes.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-              {createdCodes.map((item) => (
-                <Link key={item.code} href={`/events/${item.code.toLowerCase()}/nearby`}>
-                  <div className="p-4 rounded-2xl border border-border/80 bg-background/90 hover:border-nexus-indigo/40 transition-all shadow-2xs flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-mono font-extrabold text-nexus-indigo uppercase px-2 py-0.5 rounded bg-nexus-indigo/10 border border-nexus-indigo/20">
-                        {item.code}
-                      </span>
-                      <h4 className="text-xs font-bold text-foreground mt-1">{item.title}</h4>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="p-6 rounded-2xl border border-border/60 bg-muted/20 text-center space-y-2">
-              <Compass className="h-6 w-6 text-muted-foreground mx-auto" />
-              <p className="text-xs font-semibold text-foreground">No custom event codes created yet</p>
-              <p className="text-2xs text-muted-foreground">Click "Create Event Code" to generate your first event code.</p>
-            </div>
-          )}
         </div>
 
         {/* Modal */}
