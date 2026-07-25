@@ -1,13 +1,16 @@
 'use client';
 
 // ===================================================================
-// Settings Page — Account & System Settings
-// Founder controls strictly visible to founder account only
+// Settings Page — Clean Production Preferences
+// Displays only useful system settings: Privacy, Notifications, Theme.
+// Founder Controls & Rating Inbox are strictly hidden from normal users
+// and accessible ONLY by Founder via password-protected /admin portal.
 // ===================================================================
 import { useAuthStore } from '@/store/authStore';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { LogOut, Shield, Bell, Moon, Crown } from 'lucide-react';
+import { LogOut, Shield, Bell, Moon, Lock, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 export default function SettingsPage() {
@@ -28,93 +31,99 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto pb-20 md:pb-6">
-      <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+    <div className="flex-1 overflow-y-auto pb-20 md:pb-8">
+      <div className="max-w-lg mx-auto px-4 py-6 sm:py-8 space-y-6">
 
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        {/* Title */}
+        <div>
+          <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Settings</h1>
+          <p className="text-xs text-muted-foreground">Manage your account preferences and privacy</p>
+        </div>
 
-        {/* ── Founder Card (Strictly Visible to Founder Account Only) ──────────────── */}
-        {isFounder && (
-          <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 via-background to-background p-5 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-2xs font-extrabold tracking-wider uppercase px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-600 border border-amber-500/20 flex items-center gap-1">
-                <Crown className="h-3 w-3" /> Founder
-              </span>
-              <span className="text-2xs font-mono text-muted-foreground">Nexus Verified</span>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-extrabold text-foreground tracking-tight">Anuj Vardham</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Founder @ Nexus</p>
-            </div>
-
-            <a
-              href="https://www.linkedin.com/in/anuj-vardham-b399253a1"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full h-11 rounded-xl bg-[#0A66C2] text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#084e96] active:scale-[0.98] transition-all shadow-md shadow-[#0A66C2]/20"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-white">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-              </svg>
-              Connect with Founder on LinkedIn ↗
-            </a>
+        {/* Preferences Section */}
+        <div className="rounded-3xl border border-border/80 bg-background/90 overflow-hidden shadow-sm backdrop-blur-md">
+          <div className="px-4 py-3 border-b border-border/60 bg-muted/20">
+            <p className="text-2xs font-extrabold text-nexus-indigo uppercase tracking-wider">Account Preferences</p>
           </div>
-        )}
 
-        {/* Preferences */}
-        <div className="rounded-2xl border border-border bg-background overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-border bg-muted/30">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Preferences</p>
-          </div>
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-border/60">
             {[
-              { icon: Shield, label: 'Privacy Settings', sub: 'Control who sees your profile' },
-              { icon: Bell, label: 'Notifications', sub: 'Event room alerts' },
-              { icon: Moon, label: 'Theme', sub: 'System default' },
-            ].map(item => (
-              <div key={item.label} className="flex items-center justify-between px-4 py-3.5 opacity-80 hover:opacity-100 transition-opacity">
-                <div className="flex items-center gap-3">
-                  <item.icon className="h-4 w-4 text-nexus-indigo" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{item.label}</p>
-                    <p className="text-xs text-muted-foreground">{item.sub}</p>
+              { icon: Shield, label: 'Privacy & Visibility', sub: 'Control who sees your profile in rooms' },
+              { icon: Bell, label: 'Room Notifications', sub: 'Direct chat & event alerts' },
+              { icon: Moon, label: 'Appearance', sub: 'System dark/light mode' },
+            ].map(item => {
+              const Icon = item.icon;
+              return (
+                <div key={item.label} className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-nexus-indigo/10 text-nexus-indigo">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{item.label}</p>
+                      <p className="text-xs text-muted-foreground">{item.sub}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
-        {/* About */}
-        <div className="rounded-2xl border border-border bg-background overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-border bg-muted/30">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">About Platform</p>
+        {/* About Section */}
+        <div className="rounded-3xl border border-border/80 bg-background/90 overflow-hidden shadow-sm backdrop-blur-md">
+          <div className="px-4 py-3 border-b border-border/60 bg-muted/20">
+            <p className="text-2xs font-extrabold text-nexus-indigo uppercase tracking-wider">About Application</p>
           </div>
-          <div className="px-4 py-3.5 space-y-2">
-            <p className="text-sm text-muted-foreground">Nexus v1.0.0 · Production</p>
-            <p className="text-xs text-muted-foreground">Meet.Connect.Grow · Real-Time Event Networking Platform</p>
+          <div className="px-4 py-4 space-y-2 text-xs">
+            <div className="flex justify-between items-center text-foreground font-semibold">
+              <span>Nexus Platform</span>
+              <span className="font-mono text-2xs px-2 py-0.5 rounded bg-muted">v1.0.0</span>
+            </div>
+            <p className="text-muted-foreground">Meet.Connect.Grow · Real-Time Event Networking Platform</p>
             <a
               href="https://www.linkedin.com/company/join-nexus1"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-[#0A66C2] font-semibold hover:underline pt-1"
+              className="inline-flex items-center gap-1.5 text-[#0A66C2] font-bold hover:underline pt-1"
             >
-              Follow Nexus on LinkedIn ↗
+              Follow Nexus on LinkedIn <ExternalLink className="h-3 w-3" />
             </a>
           </div>
         </div>
 
-        {/* Sign out */}
+        {/* Founder Password-Protected Admin Inbox Link (Visible STRICTLY to Founder Account Only) */}
+        {isFounder && (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600">
+                <Lock className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-foreground">Founder Rating & Review Inbox</p>
+                <p className="text-[10px] text-muted-foreground">Protected by Founder Password</p>
+              </div>
+            </div>
+            <Link
+              href="/admin"
+              className="px-3 py-1.5 rounded-xl bg-amber-500 text-white text-2xs font-extrabold hover:bg-amber-600 transition-colors shadow-xs"
+            >
+              Open Inbox 🔒
+            </Link>
+          </div>
+        )}
+
+        {/* Sign Out Button */}
         <button
           onClick={handleSignOut}
-          className="w-full h-12 rounded-xl border border-destructive/30 text-destructive font-semibold text-sm
+          className="w-full h-12 rounded-2xl border border-destructive/30 text-destructive font-bold text-xs
                      flex items-center justify-center gap-2 hover:bg-destructive/10
-                     active:scale-[0.98] transition-all duration-150 shadow-sm"
+                     active:scale-[0.98] transition-all duration-150 shadow-2xs"
         >
           <LogOut className="h-4 w-4" />
-          Sign out
+          Sign Out of Nexus
         </button>
+
       </div>
     </div>
   );
