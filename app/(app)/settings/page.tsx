@@ -1,19 +1,23 @@
 'use client';
 
 // ===================================================================
-// Settings Page
-// Features clean, minimal Founder card linking to Anuj Vardham's LinkedIn
+// Settings Page — Account & System Settings
+// Founder controls strictly visible to founder account only
 // ===================================================================
 import { useAuthStore } from '@/store/authStore';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { LogOut, Shield, Bell, Moon, Info, Lock } from 'lucide-react';
-import Link from 'next/link';
+import { LogOut, Shield, Bell, Moon, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function SettingsPage() {
   const { user, clearUser } = useAuthStore();
   const router = useRouter();
+
+  const isFounder =
+    user?.role === 'founder' ||
+    user?.email?.toLowerCase().includes('anuj') ||
+    user?.name?.toLowerCase().includes('anuj');
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -29,66 +33,49 @@ export default function SettingsPage() {
 
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
 
-        {/* ── Simple Aesthetic Founder Card (Middle of Settings) ──────────────── */}
-        <div className="rounded-2xl border border-border bg-gradient-to-br from-background via-muted/20 to-background p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-2xs font-extrabold tracking-wider uppercase px-2.5 py-1 rounded-md bg-nexus-indigo/10 text-nexus-indigo border border-nexus-indigo/20">
-              Founder
-            </span>
-            <span className="text-2xs font-mono text-muted-foreground">Nexus Verified</span>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-extrabold text-foreground tracking-tight">Anuj Vardham</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Founder & CEO @ Nexus</p>
-          </div>
-
-          <a
-            href="https://www.linkedin.com/in/anuj-vardham-b399253a1"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full h-11 rounded-xl bg-[#0A66C2] text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#084e96] active:scale-[0.98] transition-all shadow-md shadow-[#0A66C2]/20"
-          >
-            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-white">
-              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-            </svg>
-            Connect with Founder on LinkedIn ↗
-          </a>
-        </div>
-
-        {/* Private Founder Portal Link */}
-        <div className="rounded-2xl border border-border bg-background p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
-              <Lock className="h-4 w-4" />
+        {/* ── Founder Card (Strictly Visible to Founder Account Only) ──────────────── */}
+        {isFounder && (
+          <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 via-background to-background p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-2xs font-extrabold tracking-wider uppercase px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-600 border border-amber-500/20 flex items-center gap-1">
+                <Crown className="h-3 w-3" /> Founder
+              </span>
+              <span className="text-2xs font-mono text-muted-foreground">Nexus Verified</span>
             </div>
+
             <div>
-              <p className="text-xs font-bold text-foreground">Founder Rating & Review Inbox</p>
-              <p className="text-2xs text-muted-foreground">Protected by Founder Security Password</p>
+              <h3 className="text-lg font-extrabold text-foreground tracking-tight">Anuj Vardham</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Founder @ Nexus</p>
             </div>
+
+            <a
+              href="https://www.linkedin.com/in/anuj-vardham-b399253a1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-11 rounded-xl bg-[#0A66C2] text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#084e96] active:scale-[0.98] transition-all shadow-md shadow-[#0A66C2]/20"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-white">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+              Connect with Founder on LinkedIn ↗
+            </a>
           </div>
-          <Link
-            href="/admin"
-            className="px-3 py-1.5 rounded-lg bg-nexus-indigo text-white text-2xs font-bold hover:bg-nexus-indigo/90 transition-colors"
-          >
-            Open Inbox 🔒
-          </Link>
-        </div>
+        )}
 
         {/* Preferences */}
-        <div className="rounded-2xl border border-border bg-background overflow-hidden">
+        <div className="rounded-2xl border border-border bg-background overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-border bg-muted/30">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Preferences</p>
           </div>
           <div className="divide-y divide-border">
             {[
-              { icon: Shield, label: 'Privacy Settings', sub: 'Control who sees you' },
-              { icon: Bell, label: 'Notifications', sub: 'Coming soon' },
-              { icon: Moon, label: 'Dark Mode', sub: 'Coming soon' },
+              { icon: Shield, label: 'Privacy Settings', sub: 'Control who sees your profile' },
+              { icon: Bell, label: 'Notifications', sub: 'Event room alerts' },
+              { icon: Moon, label: 'Theme', sub: 'System default' },
             ].map(item => (
-              <div key={item.label} className="flex items-center justify-between px-4 py-3.5 opacity-60">
+              <div key={item.label} className="flex items-center justify-between px-4 py-3.5 opacity-80 hover:opacity-100 transition-opacity">
                 <div className="flex items-center gap-3">
-                  <item.icon className="h-4 w-4 text-muted-foreground" />
+                  <item.icon className="h-4 w-4 text-nexus-indigo" />
                   <div>
                     <p className="text-sm font-medium text-foreground">{item.label}</p>
                     <p className="text-xs text-muted-foreground">{item.sub}</p>
@@ -100,13 +87,13 @@ export default function SettingsPage() {
         </div>
 
         {/* About */}
-        <div className="rounded-2xl border border-border bg-background overflow-hidden">
+        <div className="rounded-2xl border border-border bg-background overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-border bg-muted/30">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">About</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">About Platform</p>
           </div>
           <div className="px-4 py-3.5 space-y-2">
-            <p className="text-sm text-muted-foreground">Nexus v0.1.0 · Beta</p>
-            <p className="text-xs text-muted-foreground">Meet.Connect.Grow · Built with ❤️ in India</p>
+            <p className="text-sm text-muted-foreground">Nexus v1.0.0 · Production</p>
+            <p className="text-xs text-muted-foreground">Meet.Connect.Grow · Real-Time Event Networking Platform</p>
             <a
               href="https://www.linkedin.com/company/join-nexus1"
               target="_blank"
@@ -121,9 +108,9 @@ export default function SettingsPage() {
         {/* Sign out */}
         <button
           onClick={handleSignOut}
-          className="w-full h-12 rounded-xl border-2 border-destructive/30 text-destructive font-semibold text-sm
-                     flex items-center justify-center gap-2 hover:bg-destructive/5
-                     active:scale-[0.98] transition-all duration-150"
+          className="w-full h-12 rounded-xl border border-destructive/30 text-destructive font-semibold text-sm
+                     flex items-center justify-center gap-2 hover:bg-destructive/10
+                     active:scale-[0.98] transition-all duration-150 shadow-sm"
         >
           <LogOut className="h-4 w-4" />
           Sign out
