@@ -20,13 +20,6 @@ import { cn } from '@/lib/utils';
 
 
 
-// DEMO events shown when Supabase not connected yet
-const DEMO_EVENTS = [
-  { id: 'demo-1', title: 'TechFest 2025', join_code: 'NEXUS1', attendees: 142, category: 'college_fest' },
-  { id: 'demo-2', title: 'Startup Meetup', join_code: 'NEXUS2', attendees: 67,  category: 'meetup'       },
-  { id: 'demo-3', title: 'AI Hackathon',   join_code: 'NEXUS3', attendees: 89,  category: 'hackathon'    },
-];
-
 export default function JoinEventPage() {
   const router = useRouter();
   const { user } = useAuthStore();
@@ -88,10 +81,8 @@ export default function JoinEventPage() {
       }
     }
 
-    // Fallback / Instant entry for custom generated codes & demo codes
-    const demo = DEMO_EVENTS.find(e => e.join_code === formattedCode);
-    const eventName = demo ? demo.title : `Event [${formattedCode}]`;
-    toast.success(`Entered ${eventName}! 🎉`);
+    // Instant entry into event room
+    toast.success(`Entered Event [${formattedCode}]! 🎉`);
     setTimeout(() => router.push(`/events/${formattedCode.toLowerCase()}/nearby`), 300);
   };
 
