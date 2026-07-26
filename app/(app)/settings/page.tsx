@@ -1,9 +1,9 @@
 'use client';
 
 // ===================================================================
-// Settings Page — Clean Preferences & Small Neat Founder Mention
-// Displays useful account preferences, small neat Founder & Nexus
-// LinkedIn links, and password-protected Founder Inbox for Anuj.
+// Nexus UI v2 — Settings Page
+// Clean preferences & Founder privacy control.
+// Preserves: Supabase sign-out, Zustand session purge, and founder role check.
 // ===================================================================
 import { useAuthStore } from '@/store/authStore';
 import { createClient } from '@/lib/supabase/client';
@@ -12,7 +12,7 @@ import { LogOut, Shield, Bell, Moon, Lock, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
-export default function SettingsPage() {
+export default function SettingsPageV2() {
   const { user, clearUser } = useAuthStore();
   const router = useRouter();
 
@@ -40,22 +40,22 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto pb-20 md:pb-8">
-      <div className="max-w-lg mx-auto px-4 py-6 sm:py-8 space-y-6">
+    <div className="flex-1 overflow-y-auto pb-20 md:pb-8 bg-slate-950 text-slate-100">
+      <div className="max-w-lg mx-auto px-4 py-8 space-y-6 animate-fade-in">
 
         {/* Title */}
         <div>
-          <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Settings</h1>
-          <p className="text-xs text-muted-foreground">Manage your account preferences and privacy</p>
+          <h1 className="text-2xl font-black text-white tracking-tight">Settings</h1>
+          <p className="text-xs text-slate-400">Manage your account preferences and privacy</p>
         </div>
 
         {/* Account Preferences Section */}
-        <div className="rounded-3xl border border-border/80 bg-background/90 overflow-hidden shadow-sm backdrop-blur-md">
-          <div className="px-4 py-3 border-b border-border/60 bg-muted/20">
-            <p className="text-2xs font-extrabold text-nexus-indigo uppercase tracking-wider">Account Preferences</p>
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/80 overflow-hidden shadow-xl backdrop-blur-xl">
+          <div className="px-5 py-3.5 border-b border-slate-800 bg-slate-900/50">
+            <p className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-widest">Account Preferences</p>
           </div>
 
-          <div className="divide-y divide-border/60">
+          <div className="divide-y divide-slate-800/80">
             {[
               { icon: Shield, label: 'Privacy & Visibility', sub: 'Control who sees your profile in rooms' },
               { icon: Bell, label: 'Room Notifications', sub: 'Direct chat & event alerts' },
@@ -63,14 +63,14 @@ export default function SettingsPage() {
             ].map(item => {
               const Icon = item.icon;
               return (
-                <div key={item.label} className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/20 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-nexus-indigo/10 text-nexus-indigo">
+                <div key={item.label} className="flex items-center justify-between px-5 py-4 hover:bg-slate-800/40 transition-colors">
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                       <Icon className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-foreground">{item.label}</p>
-                      <p className="text-xs text-muted-foreground">{item.sub}</p>
+                      <p className="text-sm font-extrabold text-white">{item.label}</p>
+                      <p className="text-xs text-slate-400">{item.sub}</p>
                     </div>
                   </div>
                 </div>
@@ -80,37 +80,37 @@ export default function SettingsPage() {
         </div>
 
         {/* About & Small Neat Founder Section */}
-        <div className="rounded-3xl border border-border/80 bg-background/90 overflow-hidden shadow-sm backdrop-blur-md">
-          <div className="px-4 py-3 border-b border-border/60 bg-muted/20">
-            <p className="text-2xs font-extrabold text-nexus-indigo uppercase tracking-wider">About Application</p>
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/80 overflow-hidden shadow-xl backdrop-blur-xl">
+          <div className="px-5 py-3.5 border-b border-slate-800 bg-slate-900/50">
+            <p className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-widest">About Application</p>
           </div>
-          <div className="px-4 py-4 space-y-3 text-xs">
-            <div className="flex justify-between items-center text-foreground font-semibold">
+          <div className="px-5 py-4 space-y-3 text-xs">
+            <div className="flex justify-between items-center text-white font-bold">
               <span>Nexus Platform</span>
-              <span className="font-mono text-2xs px-2 py-0.5 rounded bg-muted">v1.0.0</span>
+              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">v2.0.0</span>
             </div>
-            <p className="text-muted-foreground leading-relaxed">
-              Meet.Connect.Grow · Real-Time Event Networking Platform
+            <p className="text-slate-400 leading-relaxed">
+              Meet · Connect · Grow · Real-Time Event Networking Platform
             </p>
 
             {/* Small Neat Founder & Nexus LinkedIn Links */}
-            <div className="pt-2.5 border-t border-border/50 flex flex-wrap items-center gap-3 text-2xs font-semibold">
+            <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center gap-3 text-xs font-semibold">
               <a
                 href="https://www.linkedin.com/in/anuj-vardham-b399253a1"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[#0A66C2] hover:underline"
+                className="inline-flex items-center gap-1 text-[#0A66C2] hover:underline font-bold"
               >
-                Founder: Anuj Vardham ↗
+                Founder: Anuj Vardham <ExternalLink className="h-3 w-3" />
               </a>
-              <span className="text-muted-foreground/60">•</span>
+              <span className="text-slate-700">•</span>
               <a
                 href="https://www.linkedin.com/company/join-nexus1"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[#0A66C2] hover:underline"
+                className="inline-flex items-center gap-1 text-[#0A66C2] hover:underline font-bold"
               >
-                Nexus Company Page ↗
+                Nexus Company Page <ExternalLink className="h-3 w-3" />
               </a>
             </div>
           </div>
@@ -120,17 +120,17 @@ export default function SettingsPage() {
         {isFounder && (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
                 <Lock className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-xs font-bold text-foreground">Founder Rating & Review Inbox</p>
-                <p className="text-[10px] text-muted-foreground">Protected by Founder Password</p>
+                <p className="text-xs font-bold text-white">Founder Rating & Review Inbox</p>
+                <p className="text-[10px] text-slate-400">Protected by Founder Password</p>
               </div>
             </div>
             <Link
               href="/admin"
-              className="px-3 py-1.5 rounded-xl bg-amber-500 text-white text-2xs font-extrabold hover:bg-amber-600 transition-colors shadow-xs"
+              className="px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-black hover:bg-amber-400 transition-colors shadow-md"
             >
               Open Inbox 🔒
             </Link>
@@ -140,9 +140,9 @@ export default function SettingsPage() {
         {/* Sign Out Button */}
         <button
           onClick={handleSignOut}
-          className="w-full h-12 rounded-2xl border border-destructive/30 text-destructive font-bold text-xs
-                     flex items-center justify-center gap-2 hover:bg-destructive/10
-                     active:scale-[0.98] transition-all duration-150 shadow-2xs"
+          className="w-full h-12 rounded-2xl border border-rose-500/30 text-rose-400 font-extrabold text-xs
+                     flex items-center justify-center gap-2 hover:bg-rose-500/10
+                     active:scale-[0.98] transition-all duration-200 shadow-md"
         >
           <LogOut className="h-4 w-4" />
           Sign Out of Nexus
