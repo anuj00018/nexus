@@ -145,11 +145,24 @@ export function DirectChatDrawer({ isOpen, onClose, recipient }: DirectChatDrawe
               href={(() => {
                 let url = recipient.linkedin_url?.trim() || '';
                 if (url && !url.startsWith('http')) url = `https://${url}`;
-                if (url && /^https?:\/\/(www\.)?linkedin\.com\/in\/.+/i.test(url)) return url;
+                if (url && /^https?:\/\/(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[^\s/]+\/?.*$/i.test(url)) return url;
                 return `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(recipient.name)}`;
               })()}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                let url = recipient.linkedin_url?.trim() || '';
+                if (url && !url.startsWith('http')) url = `https://${url}`;
+                const finalUrl = (url && /^https?:\/\/(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[^\s/]+\/?.*$/i.test(url))
+                  ? url
+                  : `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(recipient.name)}`;
+                console.log('[LinkedIn Debug Trace - Chat]:', {
+                  attendeeId: recipient.id,
+                  attendeeName: recipient.name,
+                  dbLinkedinUrl: recipient.linkedin_url,
+                  finalUrlOpened: finalUrl,
+                });
+              }}
               className="px-2.5 py-1.5 rounded-xl text-white flex items-center gap-1 text-xs font-bold shadow-md no-underline"
               style={{ background: '#0A66C2' }}
               title="View LinkedIn Profile"

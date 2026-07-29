@@ -471,6 +471,15 @@ export default function NearbyPageV2() {
                       href={getLinkedInHref(person.linkedin_url, person.name)}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => {
+                        const finalUrl = getLinkedInHref(person.linkedin_url, person.name);
+                        console.log('[LinkedIn Debug Trace]:', {
+                          attendeeId: person.id,
+                          attendeeName: person.name,
+                          dbLinkedinUrl: person.linkedin_url,
+                          finalUrlOpened: finalUrl,
+                        });
+                      }}
                       className="flex-1 h-11 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 text-white active:scale-95 transition-all shadow-md no-underline"
                       style={{
                         background: '#0A66C2',
