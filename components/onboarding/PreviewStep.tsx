@@ -143,7 +143,7 @@ export function PreviewStep({
             {linkedinUrl ? (
               <Button variant="accent" size="sm" asChild fullWidth
                 leftIcon={<Linkedin className="h-4 w-4" />}>
-                <a href={linkedinUrl} target="_blank" rel="noopener noreferrer">
+                <a href={linkedinUrl.startsWith('http') ? linkedinUrl : `https://${linkedinUrl}`} target="_blank" rel="noopener noreferrer">
                   View LinkedIn
                 </a>
               </Button>

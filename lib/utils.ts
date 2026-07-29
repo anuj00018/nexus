@@ -170,7 +170,7 @@ export function getInitials(name: string): string {
  * Check if a LinkedIn URL is valid.
  */
 export function isValidLinkedInUrl(url: string): boolean {
-  return /^https:\/\/(www\.)?linkedin\.com\/in\/[\w-]+\/?$/.test(url);
+  return /^https?:\/\/(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[^\s/]+\/?.*$/i.test(url.trim());
 }
 
 /**

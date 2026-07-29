@@ -135,7 +135,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
               fontSize: '14px',
             },
             success: { iconTheme: { primary: '#10B981', secondary: '#fff' } },
-            error:   { iconTheme: { primary: '#F87171', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#F87171', secondary: '#fff' } },
           }}
         />
       </AuthListener>

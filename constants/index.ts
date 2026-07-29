@@ -93,7 +93,7 @@ export const VALIDATION = {
   MAX_HEADLINE_LENGTH: 220,
   MAX_COMPANY_LENGTH: 100,
   MAX_BIO_LENGTH: 300,
-  LINKEDIN_URL_REGEX: /^https:\/\/(www\.)?linkedin\.com\/in\/[\w-]+\/?$/,
+  LINKEDIN_URL_REGEX: /^https?:\/\/(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[^\s/]+\/?.*$/i,
   GITHUB_URL_REGEX: /^https:\/\/(www\.)?github\.com\/[\w-]+\/?$/,
 } as const;
 

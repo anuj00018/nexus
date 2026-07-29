@@ -55,8 +55,8 @@ export async function POST(request: Request) {
     const formattedLinkedin = user.linkedin_url?.trim().startsWith('http')
       ? user.linkedin_url.trim()
       : user.linkedin_url?.trim()
-      ? `https://${user.linkedin_url.trim()}`
-      : 'https://www.linkedin.com';
+        ? `https://${user.linkedin_url.trim()}`
+        : 'https://www.linkedin.com';
 
     const userId = user.id || `user-${user.name.toLowerCase().replace(/\s+/g, '-')}`;
 

@@ -141,22 +141,22 @@ export function DirectChatDrawer({ isOpen, onClose, recipient }: DirectChatDrawe
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={() => {
-                let targetUrl = recipient.linkedin_url?.trim();
-                if (targetUrl && !targetUrl.startsWith('http')) targetUrl = `https://${targetUrl}`;
-                if (!targetUrl || targetUrl.length < 18) {
-                  targetUrl = `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(recipient.name)}`;
-                }
-                window.open(targetUrl, '_blank', 'noopener,noreferrer');
-              }}
-              className="px-2.5 py-1.5 rounded-xl text-white flex items-center gap-1 text-xs font-bold shadow-md"
+            <a
+              href={(() => {
+                let url = recipient.linkedin_url?.trim() || '';
+                if (url && !url.startsWith('http')) url = `https://${url}`;
+                if (url && /^https?:\/\/(www\.)?linkedin\.com\/in\/.+/i.test(url)) return url;
+                return `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(recipient.name)}`;
+              })()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2.5 py-1.5 rounded-xl text-white flex items-center gap-1 text-xs font-bold shadow-md no-underline"
               style={{ background: '#0A66C2' }}
               title="View LinkedIn Profile"
             >
               <Linkedin className="h-3.5 w-3.5 fill-white" />
               LinkedIn ↗
-            </button>
+            </a>
             <button
               onClick={onClose}
               className="p-2 rounded-xl text-slate-400 hover:text-white transition-colors hover:bg-white/[0.06]"

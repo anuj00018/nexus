@@ -124,17 +124,18 @@ export default function NearbyPageV2() {
     };
   }, [syncRoomParticipants, eventId, user]);
 
-  // Open real user's LinkedIn profile in a new tab
-  const handleOpenLinkedIn = (linkedinUrl?: string, name?: string) => {
-    let targetUrl = linkedinUrl?.trim();
-    if (targetUrl && !targetUrl.startsWith('http')) {
-      targetUrl = `https://${targetUrl}`;
+  // Build the canonical LinkedIn profile href at render time.
+  // Rendered as a plain <a href> — never window.open() — so that
+  // Android App Links / iOS Universal Links resolve natively.
+  const getLinkedInHref = (linkedinUrl?: string | null, name?: string): string => {
+    let url = linkedinUrl?.trim() || '';
+    if (url && !url.startsWith('http')) {
+      url = `https://${url}`;
     }
-    if (!targetUrl || targetUrl.length < 18) {
-      targetUrl = `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(name || 'attendee')}`;
+    if (url && /^https?:\/\/(www\.)?linkedin\.com\/in\/.+/i.test(url)) {
+      return url;
     }
-    toast.success(`Opening ${name || 'user'}'s LinkedIn profile...`);
-    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    return `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(name || 'attendee')}`;
   };
 
   // Calculate intelligent Match Percentage based on common interests & goals
@@ -213,11 +214,11 @@ export default function NearbyPageV2() {
           {/* Filter Chips Toolbar */}
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none w-full sm:w-auto">
             {([
-              { key: 'all',       label: `All (${people.length})` },
-              { key: 'verified',  label: '✓ Verified' },
+              { key: 'all', label: `All (${people.length})` },
+              { key: 'verified', label: '✓ Verified' },
               { key: 'cofounder', label: '🤝 Co-founders' },
-              { key: 'hiring',    label: '👔 Hiring' },
-              { key: 'tech',      label: '⚡ AI & Tech' },
+              { key: 'hiring', label: '👔 Hiring' },
+              { key: 'tech', label: '⚡ AI & Tech' },
             ] as const).map((tab) => (
               <button
                 key={tab.key}
@@ -262,7 +263,7 @@ export default function NearbyPageV2() {
                 if (user?.id) {
                   try {
                     await fetch(`/api/room?eventId=${eventId}&userId=${encodeURIComponent(user.id)}`, { method: 'DELETE' });
-                  } catch {}
+                  } catch { }
                 }
                 toast.success('Exited Event Room');
                 router.push('/dashboard');
@@ -466,9 +467,11 @@ export default function NearbyPageV2() {
 
                   {/* Action Buttons: LinkedIn Profile & Chat (Self Messaging Disabled) */}
                   <div className="pt-4 flex items-center gap-2.5" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <button
-                      onClick={() => handleOpenLinkedIn(person.linkedin_url, person.name)}
-                      className="flex-1 h-11 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 text-white active:scale-95 transition-all shadow-md"
+                    <a
+                      href={getLinkedInHref(person.linkedin_url, person.name)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 h-11 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 text-white active:scale-95 transition-all shadow-md no-underline"
                       style={{
                         background: '#0A66C2',
                         boxShadow: '0 4px 16px rgba(10, 102, 194, 0.25)',
@@ -476,7 +479,7 @@ export default function NearbyPageV2() {
                     >
                       <Linkedin className="h-4 w-4 fill-white shrink-0" />
                       LinkedIn Profile ↗
-                    </button>
+                    </a>
 
                     {!isCurrentUser ? (
                       <button
@@ -515,5 +518,12 @@ export default function NearbyPageV2() {
         recipient={activeChatRecipient}
       />
     </div>
+  );
+}
+isOpen = { Boolean(activeChatRecipient) }
+onClose = {() => setActiveChatRecipient(null)}
+recipient = { activeChatRecipient }
+  />
+    </div >
   );
 }

@@ -56,7 +56,7 @@ export default function OnboardingPage() {
           }
         }
       }).catch((e) => console.warn('Metadata prefill notice:', e));
-    } catch {}
+    } catch { }
   }, []);
 
   const toggleItem = (list: string[], item: string, setter: (val: string[]) => void) => {
@@ -92,7 +92,7 @@ export default function OnboardingPage() {
         avatar_url: avatarUrl.trim() || null,
         company: organization.trim() || null,
         bio: bio.trim() || null,
-        linkedin_url: user?.linkedin_url || 'https://www.linkedin.com',
+        linkedin_url: user?.linkedin_url || '',
         interests: selectedInterests,
         looking_for: selectedLookingFor,
         role: user?.role || 'attendee',

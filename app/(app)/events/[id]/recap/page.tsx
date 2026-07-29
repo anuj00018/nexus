@@ -47,7 +47,7 @@ export default function RecapPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const userLinkedinUrl = user?.linkedin_url || 'https://www.linkedin.com/in/anuj-vardham-b399253a1';
+  const userLinkedinUrl = user?.linkedin_url || '';
 
   const toggleFeedbackTag = (tag: string) => {
     setFeedbackTags((prev) =>
@@ -490,7 +490,12 @@ export default function RecapPage() {
                   </div>
 
                   <a
-                    href={conn.linkedin_url}
+                    href={(() => {
+                      let url = conn.linkedin_url?.trim() || '';
+                      if (url && !url.startsWith('http')) url = `https://${url}`;
+                      if (url && /^https?:\/\/(www\.)?linkedin\.com\/in\/.+/i.test(url)) return url;
+                      return `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(conn.name)}`;
+                    })()}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white text-xs font-semibold transition-all shrink-0 shadow-md"

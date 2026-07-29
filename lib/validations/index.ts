@@ -37,7 +37,7 @@ export const profileSchema = z.object({
   contact_preference: z.enum(['open', 'selective', 'closed']).default('open'),
   linkedin_url: z
     .string()
-    .regex(/^https:\/\/(www\.)?linkedin\.com\/in\/[\w-]+\/?$/, 'Enter a valid LinkedIn URL')
+    .regex(/^https?:\/\/(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[^\s/]+\/?.*$/i, 'Enter a valid LinkedIn profile URL')
     .optional()
     .or(z.literal('')),
   github_url: z
