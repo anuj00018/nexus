@@ -68,7 +68,7 @@ export function AppNav() {
       >
         {/* Logo */}
         <div className="flex items-center px-5 h-16" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
-          <NexusLogo size={26} variant="full" />
+          <NexusLogo size={26} variant="full" color="light" />
         </div>
 
         {/* Nav items */}
