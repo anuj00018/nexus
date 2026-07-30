@@ -529,10 +529,3 @@ export default function NearbyPageV2() {
     </div>
   );
 }
-isOpen = { Boolean(activeChatRecipient) }
-onClose = {() => setActiveChatRecipient(null)}
-recipient = { activeChatRecipient }
-  />
-    </div >
-  );
-}
