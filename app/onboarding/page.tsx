@@ -4,15 +4,15 @@
 // Nexus v3.0 — First-Time Profile Onboarding
 // Premium glass card form with ambient glow.
 // Preserves: All form state, Supabase upserts, validation, router logic.
+// Includes: Strict LinkedIn Profile URL validation (https://www.linkedin.com/in/username).
 // ===================================================================
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, User, Building2, ShieldCheck } from 'lucide-react';
+import { ArrowRight, User, Building2, ShieldCheck, Linkedin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { NexusIcon } from '@/components/ui/Logo';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
-import { ROUTES } from '@/constants';
 import { cn } from '@/lib/utils';
 
 const LOOKING_FOR_OPTIONS = [
@@ -30,12 +30,15 @@ const INTEREST_TAGS = [
   'UI/UX Design', 'Web3 & Crypto', 'SaaS & Startups', 'Venture Capital', 'Growth & Marketing'
 ];
 
+const LINKEDIN_URL_REGEX = /^https?:\/\/(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[^\s/]+\/?.*$/i;
+
 export default function OnboardingPage() {
   const router = useRouter();
   const { user, setUser, setOnboarded } = useAuthStore();
 
   const [fullName, setFullName] = useState<string>(user?.name || '');
   const [avatarUrl, setAvatarUrl] = useState<string>(user?.avatar_url || '');
+  const [linkedinUrl, setLinkedinUrl] = useState<string>(user?.linkedin_url || '');
   const [organization, setOrganization] = useState<string>(user?.company || '');
   const [bio, setBio] = useState<string>(user?.bio || '');
   const [selectedLookingFor, setSelectedLookingFor] = useState<string[]>(['Networking', 'Co-founder']);
@@ -54,6 +57,9 @@ export default function OnboardingPage() {
           if (!avatarUrl && sbUser.user_metadata.avatar_url) {
             setAvatarUrl(sbUser.user_metadata.avatar_url);
           }
+          if (!linkedinUrl && sbUser.user_metadata.linkedin_url && LINKEDIN_URL_REGEX.test(sbUser.user_metadata.linkedin_url)) {
+            setLinkedinUrl(sbUser.user_metadata.linkedin_url);
+          }
         }
       }).catch((e) => console.warn('Metadata prefill notice:', e));
     } catch { }
@@ -70,13 +76,24 @@ export default function OnboardingPage() {
   const handleCompleteProfile = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isLoading) return; // Prevent duplicate submissions
+    if (isLoading) return;
 
     const trimmedName = fullName.trim();
     if (!trimmedName) {
       toast.error('Please enter your Full Name');
       return;
     }
+
+    let formattedLinkedin = linkedinUrl.trim();
+    if (formattedLinkedin && !formattedLinkedin.startsWith('http')) {
+      formattedLinkedin = `https://${formattedLinkedin}`;
+    }
+
+    if (!formattedLinkedin || !LINKEDIN_URL_REGEX.test(formattedLinkedin)) {
+      toast.error('Please enter a valid LinkedIn Profile URL (e.g. https://www.linkedin.com/in/yourname)');
+      return;
+    }
+
     if (selectedLookingFor.length === 0) {
       toast.error('Please select at least one "Looking For" goal');
       return;
@@ -92,7 +109,7 @@ export default function OnboardingPage() {
         avatar_url: avatarUrl.trim() || null,
         company: organization.trim() || null,
         bio: bio.trim() || null,
-        linkedin_url: user?.linkedin_url || '',
+        linkedin_url: formattedLinkedin,
         interests: selectedInterests,
         looking_for: selectedLookingFor,
         role: user?.role || 'attendee',
@@ -247,7 +264,32 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            {/* 2. College / Company */}
+            {/* 2. LinkedIn Profile URL */}
+            <div className="space-y-1.5">
+              <label className="block text-2xs font-semibold tracking-wider uppercase flex items-center justify-between" style={{ color: '#4263EB' }}>
+                <span>LinkedIn Profile URL *</span>
+                <span className="text-slate-500 font-normal normal-case tracking-normal">Must be /in/username</span>
+              </label>
+              <div className="relative">
+                <Linkedin className="absolute left-3.5 top-3.5 h-4 w-4 text-sky-400" />
+                <input
+                  type="url"
+                  required
+                  placeholder="https://www.linkedin.com/in/username"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  className="w-full h-11 pl-10 pr-3.5 rounded-xl text-xs text-white placeholder:text-slate-600 font-medium focus:outline-none transition-all duration-200"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                  }}
+                  onFocus={(e) => { e.target.style.borderColor = 'rgba(66, 99, 235, 0.4)'; e.target.style.boxShadow = '0 0 0 3px rgba(66, 99, 235, 0.08)'; }}
+                  onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'; e.target.style.boxShadow = 'none'; }}
+                />
+              </div>
+            </div>
+
+            {/* 3. College / Company */}
             <div className="space-y-1.5">
               <label className="block text-2xs font-semibold tracking-wider uppercase" style={{ color: '#4263EB' }}>
                 College / Company
@@ -270,7 +312,7 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            {/* 3. Looking For (Multi-Select) */}
+            {/* 4. Looking For (Multi-Select) */}
             <div className="space-y-2">
               <label className="block text-2xs font-semibold tracking-wider uppercase flex items-center justify-between" style={{ color: '#4263EB' }}>
                 <span>What Are You Looking For? *</span>
@@ -305,7 +347,7 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            {/* 4. Interests & Domains (Multi-Select) */}
+            {/* 5. Interests & Domains (Multi-Select) */}
             <div className="space-y-2">
               <label className="block text-2xs font-semibold tracking-wider uppercase" style={{ color: '#4263EB' }}>
                 Interests & Domains
@@ -339,7 +381,7 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            {/* 5. Short Bio (Optional) */}
+            {/* 6. Short Bio (Optional) */}
             <div className="space-y-1.5">
               <label className="block text-2xs font-semibold tracking-wider uppercase" style={{ color: '#4263EB' }}>
                 Short Bio (Optional)

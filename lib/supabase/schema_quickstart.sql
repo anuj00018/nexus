@@ -203,6 +203,18 @@ create policy "Users insert views" on public.profile_views
 -- ===================================================================
 -- FUNCTION: Auto-create user profile on LinkedIn sign-in
 -- ===================================================================
+-- IMPORTANT: LinkedIn OIDC (openid profile email scopes) never returns a
+-- public profile URL — only name, email, and avatar. The OIDC "iss" claim
+-- is the *token issuer* (e.g. "https://www.linkedin.com"), NOT a profile
+-- link. Previously this trigger wrote raw_user_meta_data->>'iss' into
+-- linkedin_url, which meant every new user's "View LinkedIn" button
+-- pointed at the LinkedIn homepage instead of a profile.
+--
+-- Fix: leave linkedin_url NULL on creation. The onboarding flow
+-- (app/onboarding/page.tsx) already requires and strictly validates a real
+-- https://www.linkedin.com/in/username URL before a user can finish
+-- onboarding, and middleware.ts redirects users with a missing/invalid
+-- linkedin_url back to /onboarding.
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -212,7 +224,7 @@ begin
     new.email,
     coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
     new.raw_user_meta_data->>'avatar_url',
-    new.raw_user_meta_data->>'iss'
+    null
   )
   on conflict (id) do update set
     name       = excluded.name,

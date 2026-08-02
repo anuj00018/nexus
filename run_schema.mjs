@@ -231,11 +231,7 @@ await run('handle_new_user fn', `
         new.raw_user_meta_data->>'picture',
         new.raw_user_meta_data->>'avatar'
       ),
-      COALESCE(
-        new.raw_user_meta_data->>'linkedin_url',
-        new.raw_user_meta_data->>'provider_url',
-        new.raw_user_meta_data->>'profile'
-      )
+      null
     )
     ON CONFLICT (id) DO UPDATE SET
       email      = EXCLUDED.email,
@@ -257,6 +253,16 @@ await run('create trigger', `
   CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user()
+`);
+
+// ── One-time migration for corrupted LinkedIn URLs ──
+console.log('🧹 Cleaning corrupted LinkedIn URLs...');
+await run('clean corrupted linkedin_url', `
+  UPDATE public.users
+  SET linkedin_url = null,
+      updated_at   = now()
+  WHERE linkedin_url IS NOT NULL
+    AND linkedin_url !~* '^https?://(www\\.)?linkedin\\.com/in/[^\\s/]+/?.*$'
 `);
 
 // ── Demo events ──

@@ -49,6 +49,10 @@ function AuthListener({ children }: { children: React.ReactNode }) {
                 setUser(data);
               } else {
                 // Table might not exist yet — set minimal user from auth session
+                // NOTE: linkedin_url intentionally has NO hardcoded fallback here.
+                // LinkedIn OIDC never returns a profile URL, so a missing/invalid
+                // linkedin_url must be null — the onboarding flow and middleware
+                // handle collecting and validating the real one.
                 setUser({
                   id: session.user.id,
                   email: session.user.email ?? '',
@@ -58,7 +62,7 @@ function AuthListener({ children }: { children: React.ReactNode }) {
                     ?? 'User',
                   avatar_url: session.user.user_metadata?.avatar_url ?? null,
                   headline: session.user.user_metadata?.headline ?? null,
-                  linkedin_url: session.user.user_metadata?.linkedin_url ?? 'https://www.linkedin.com/in/anuj-vardham-b399253a1',
+                  linkedin_url: session.user.user_metadata?.linkedin_url ?? null,
                   skills: [],
                   role: 'attendee',
                   is_active: true,
@@ -85,7 +89,7 @@ function AuthListener({ children }: { children: React.ReactNode }) {
             if (data && !error) {
               setUser(data);
             } else {
-              // Fallback to auth metadata
+              // Fallback to auth metadata — no hardcoded linkedin_url (see note above)
               setUser({
                 id: session.user.id,
                 email: session.user.email ?? '',
@@ -95,7 +99,7 @@ function AuthListener({ children }: { children: React.ReactNode }) {
                   ?? 'User',
                 avatar_url: session.user.user_metadata?.avatar_url ?? null,
                 headline: null,
-                linkedin_url: session.user.user_metadata?.linkedin_url ?? 'https://www.linkedin.com/in/anuj-vardham-b399253a1',
+                linkedin_url: session.user.user_metadata?.linkedin_url ?? null,
                 skills: [],
                 role: 'attendee',
 

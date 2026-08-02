@@ -7,6 +7,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+const LINKEDIN_URL_REGEX = /^https?:\/\/(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[^\s/]+\/?.*$/i;
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
@@ -42,7 +44,7 @@ export async function GET(request: Request) {
           // Check if profile and preferences exist
           const { data: profile } = await supabase
             .from('users')
-            .select('role')
+            .select('role, linkedin_url')
             .eq('id', sbUser.id)
             .single();
 
@@ -60,14 +62,15 @@ export async function GET(request: Request) {
             const meta = sbUser.user_metadata || {};
             const fullName = meta.full_name || meta.name || sbUser.email?.split('@')[0] || 'Nexus User';
             const avatarUrl = meta.avatar_url || meta.picture || meta.avatar || null;
-            const linkedinUrl = meta.linkedin_url || meta.provider_url || meta.profile || null;
+            const rawLinkedin = meta.linkedin_url || null;
+            const validLinkedinUrl = rawLinkedin && LINKEDIN_URL_REGEX.test(rawLinkedin) ? rawLinkedin : null;
 
             await supabase.from('users').upsert({
               id: sbUser.id,
               email: sbUser.email || '',
               name: fullName,
               avatar_url: avatarUrl,
-              linkedin_url: linkedinUrl,
+              linkedin_url: validLinkedinUrl,
               updated_at: new Date().toISOString(),
             }, { onConflict: 'id' });
           }
@@ -80,9 +83,14 @@ export async function GET(request: Request) {
             }, { onConflict: 'user_id' });
           }
 
-          // First-time login or incomplete onboarding — route to /onboarding
-          if (!prefs?.onboarding_done) {
-            console.log(`[OAuth Callback] Onboarding incomplete or first-time login. Redirecting to /onboarding`);
+          // Check if user has a valid LinkedIn URL
+          const hasValidLinkedin = Boolean(
+            profile?.linkedin_url && LINKEDIN_URL_REGEX.test(profile.linkedin_url)
+          );
+
+          // First-time login or incomplete onboarding / invalid linkedin — route to /onboarding
+          if (!prefs?.onboarding_done || !hasValidLinkedin) {
+            console.log(`[OAuth Callback] Onboarding incomplete or LinkedIn missing. Redirecting to /onboarding`);
             return NextResponse.redirect(`${baseOrigin}/onboarding`);
           }
         }
@@ -99,6 +107,5 @@ export async function GET(request: Request) {
     }
   }
 
-  console.warn('[OAuth Callback] No code or error parameter found in URL query.');
-  return NextResponse.redirect(`${baseOrigin}/login?error=no_code`);
+  return NextResponse.redirect(`${baseOrigin}/login`);
 }
