@@ -63,6 +63,8 @@ export async function middleware(request: NextRequest) {
   // Onboarding route protection check for authenticated users
   if (user) {
     try {
+      const onboardedCookie = request.cookies.get('nexus_onboarded')?.value === 'true';
+
       const { data: prefs } = await supabase
         .from('user_preferences')
         .select('onboarding_done')
@@ -85,7 +87,7 @@ export async function middleware(request: NextRequest) {
         profile?.linkedin_url && LINKEDIN_URL_REGEX.test(profile.linkedin_url)
       );
 
-      const isOnboarded = Boolean(prefs?.onboarding_done) && hasValidLinkedIn;
+      const isOnboarded = onboardedCookie || (Boolean(prefs?.onboarding_done) && hasValidLinkedIn);
 
       // 1. If onboarding is not completed (or linkedin_url is missing/invalid),
       //    redirect from protected app routes to /onboarding
