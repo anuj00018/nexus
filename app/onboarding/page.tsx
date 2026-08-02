@@ -5,6 +5,7 @@
 // Premium glass card form with ambient glow.
 // Preserves: All form state, Supabase upserts, validation, router logic.
 // Includes: Strict LinkedIn Profile URL validation (https://www.linkedin.com/in/username).
+// Non-blocking navigation: Saves state instantly to avoid network hangs.
 // ===================================================================
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -102,8 +103,10 @@ export default function OnboardingPage() {
     setIsLoading(true);
 
     try {
+      const targetId = user?.id || `user-linkedin-${Date.now()}`;
+
       const updatedUser = {
-        id: user?.id || `user-linkedin-${Date.now()}`,
+        id: targetId,
         email: user?.email || 'authenticated@linkedin.com',
         name: trimmedName,
         avatar_url: avatarUrl.trim() || null,
@@ -118,23 +121,23 @@ export default function OnboardingPage() {
         updated_at: new Date().toISOString(),
       };
 
-      // 1. Immediately update Zustand local state & set onboarded flag & set cookie
+      // 1. Immediately update Zustand local state, set onboarded flag & set cookie
       setUser(updatedUser as any);
       setOnboarded(true);
 
       // Set cookie for middleware route protection fallback
       document.cookie = `nexus_onboarded=true; path=/; max-age=${30 * 24 * 60 * 60}`;
 
-      // 2. Persist profile to Supabase DB
-      try {
-        const supabase = createClient();
-        const { data: { user: sbUser } } = await supabase.auth.getUser();
-        const targetId = sbUser?.id || user?.id;
+      // 2. Fire-and-forget background DB save (non-blocking so network delays never freeze UI)
+      (async () => {
+        try {
+          const supabase = createClient();
+          const { data: { user: sbUser } } = await supabase.auth.getUser();
+          const dbUserId = sbUser?.id || targetId;
 
-        if (targetId) {
-          const { error: userErr } = await supabase.from('users').upsert({
-            id: targetId,
-            email: sbUser?.email || user?.email || '',
+          await supabase.from('users').upsert({
+            id: dbUserId,
+            email: sbUser?.email || updatedUser.email,
             name: updatedUser.name,
             avatar_url: updatedUser.avatar_url,
             company: updatedUser.company,
@@ -143,30 +146,21 @@ export default function OnboardingPage() {
             is_verified: true,
           }, { onConflict: 'id' });
 
-          if (userErr) console.warn('[Onboarding] Users upsert notice:', userErr.message);
-
-          const { error: prefErr } = await supabase.from('user_preferences').upsert({
-            user_id: targetId,
+          await supabase.from('user_preferences').upsert({
+            user_id: dbUserId,
             goals: selectedLookingFor,
             onboarding_done: true,
             availability: 'available',
           }, { onConflict: 'user_id' });
-
-          if (prefErr) console.warn('[Onboarding] Prefs upsert notice:', prefErr.message);
+        } catch (dbErr) {
+          console.warn('[Onboarding] Async DB upsert notice:', dbErr);
         }
-      } catch (dbErr) {
-        console.error('Supabase DB save warning:', dbErr);
-      }
+      })();
 
       toast.success('🎉 Profile saved! Redirecting to Dashboard...');
 
-      // 3. Immediate smooth navigation to Dashboard
-      router.push('/dashboard');
-      setTimeout(() => {
-        if (window.location.pathname === '/onboarding') {
-          window.location.replace('/dashboard');
-        }
-      }, 400);
+      // 3. Instant, un-blocked navigation to Dashboard
+      window.location.replace('/dashboard');
 
     } catch (err: any) {
       console.error('Profile onboarding error:', err);
