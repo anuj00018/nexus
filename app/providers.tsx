@@ -3,12 +3,15 @@
 /**
  * Providers — wraps the app with all global context providers
  * Fully error-safe: handles missing Supabase config, missing tables, etc.
+ * Preserves user onboarding & LinkedIn profile state permanently.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
+
+const LINKEDIN_URL_REGEX = /^https?:\/\/(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[^\s/]+\/?.*$/i;
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,7 +24,7 @@ const queryClient = new QueryClient({
 });
 
 function AuthListener({ children }: { children: React.ReactNode }) {
-  const { setUser, clearUser, setLoading } = useAuthStore();
+  const { setUser, clearUser, setLoading, setOnboarded } = useAuthStore();
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -35,41 +38,65 @@ function AuthListener({ children }: { children: React.ReactNode }) {
     import('@/lib/supabase/client').then(({ createClient }) => {
       const supabase = createClient();
 
+      const hydrateUserProfile = (data: any, sessionUser: any) => {
+        let savedLocal: any = null;
+        try {
+          const raw = localStorage.getItem('nexus_user_profile');
+          if (raw) savedLocal = JSON.parse(raw);
+        } catch { }
+
+        const dbLinkedin = data?.linkedin_url;
+        const localLinkedin = savedLocal?.linkedin_url;
+        const finalLinkedinUrl = (dbLinkedin && LINKEDIN_URL_REGEX.test(dbLinkedin))
+          ? dbLinkedin
+          : (localLinkedin && LINKEDIN_URL_REGEX.test(localLinkedin))
+            ? localLinkedin
+            : null;
+
+        const combinedUser = {
+          id: sessionUser.id,
+          email: sessionUser.email ?? '',
+          name: data?.name
+            ?? savedLocal?.name
+            ?? sessionUser.user_metadata?.full_name
+            ?? sessionUser.user_metadata?.name
+            ?? sessionUser.email?.split('@')[0]
+            ?? 'User',
+          avatar_url: data?.avatar_url ?? savedLocal?.avatar_url ?? sessionUser.user_metadata?.avatar_url ?? null,
+          company: data?.company ?? savedLocal?.company ?? null,
+          bio: data?.bio ?? savedLocal?.bio ?? null,
+          linkedin_url: finalLinkedinUrl,
+          interests: data?.skills ?? savedLocal?.interests ?? [],
+          looking_for: savedLocal?.looking_for ?? ['Networking'],
+          role: data?.role ?? savedLocal?.role ?? 'attendee',
+          is_active: true,
+          created_at: data?.created_at ?? new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        setUser(combinedUser as any);
+
+        if (finalLinkedinUrl && LINKEDIN_URL_REGEX.test(finalLinkedinUrl)) {
+          setOnboarded(true);
+          try {
+            document.cookie = 'nexus_onboarded=true; path=/; max-age=31536000; SameSite=Lax';
+          } catch { }
+        }
+      };
+
       // Get initial session
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
-          // Try to fetch profile — gracefully handle missing tables
           supabase
             .from('users')
             .select('*')
             .eq('id', session.user.id)
             .single()
-            .then(({ data, error }) => {
-              if (data && !error) {
-                setUser(data);
-              } else {
-                // Table might not exist yet — set minimal user from auth session
-                // NOTE: linkedin_url intentionally has NO hardcoded fallback here.
-                // LinkedIn OIDC never returns a profile URL, so a missing/invalid
-                // linkedin_url must be null — the onboarding flow and middleware
-                // handle collecting and validating the real one.
-                setUser({
-                  id: session.user.id,
-                  email: session.user.email ?? '',
-                  name: session.user.user_metadata?.full_name
-                    ?? session.user.user_metadata?.name
-                    ?? session.user.email?.split('@')[0]
-                    ?? 'User',
-                  avatar_url: session.user.user_metadata?.avatar_url ?? null,
-                  headline: session.user.user_metadata?.headline ?? null,
-                  linkedin_url: session.user.user_metadata?.linkedin_url ?? null,
-                  skills: [],
-                  role: 'attendee',
-                  is_active: true,
-                  created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString(),
-                } as any);
-              }
+            .then(({ data }) => {
+              hydrateUserProfile(data, session.user);
+            })
+            .catch(() => {
+              hydrateUserProfile(null, session.user);
             });
         } else {
           setLoading(false);
@@ -80,37 +107,20 @@ function AuthListener({ children }: { children: React.ReactNode }) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
           if (event === 'SIGNED_IN' && session?.user) {
-            const { data, error } = await supabase
+            const { data } = await supabase
               .from('users')
               .select('*')
               .eq('id', session.user.id)
               .single();
 
-            if (data && !error) {
-              setUser(data);
-            } else {
-              // Fallback to auth metadata — no hardcoded linkedin_url (see note above)
-              setUser({
-                id: session.user.id,
-                email: session.user.email ?? '',
-                name: session.user.user_metadata?.full_name
-                  ?? session.user.user_metadata?.name
-                  ?? session.user.email?.split('@')[0]
-                  ?? 'User',
-                avatar_url: session.user.user_metadata?.avatar_url ?? null,
-                headline: null,
-                linkedin_url: session.user.user_metadata?.linkedin_url ?? null,
-                skills: [],
-                role: 'attendee',
-
-                is_active: true,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              } as any);
-            }
+            hydrateUserProfile(data, session.user);
           } else if (event === 'SIGNED_OUT') {
             clearUser();
             queryClient.clear();
+            try {
+              document.cookie = 'nexus_onboarded=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+              localStorage.removeItem('nexus_user_profile');
+            } catch { }
           }
         }
       );
