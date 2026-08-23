@@ -18,6 +18,23 @@ const ADMIN_ROUTES = ['/admin', '/founder'];
 // linkedin.com/homepage URL left over from the old buggy trigger) is invalid.
 const LINKEDIN_URL_REGEX = /^https?:\/\/(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[^\s/]+\/?.*$/i;
 
+// Helper to prevent Vercel Edge middleware timeouts (hard cap at 25s on Vercel)
+function withTimeout<T>(promise: PromiseLike<T>, ms: number, fallback: T): Promise<T> {
+  let timer: any;
+  const timeoutPromise = new Promise<T>((resolve) => {
+    timer = setTimeout(() => resolve(fallback), ms);
+  });
+  return Promise.race([
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        return res;
+      })
+      .catch(() => fallback),
+    timeoutPromise,
+  ]);
+}
+
 export async function middleware(request: NextRequest) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return NextResponse.next({ request });
@@ -46,11 +63,17 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
+  const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
+  const isAdmin = ADMIN_ROUTES.some((r) => pathname.startsWith(r));
 
-  const isProtected = PROTECTED_ROUTES.some(r => pathname.startsWith(r));
-  const isAdmin = ADMIN_ROUTES.some(r => pathname.startsWith(r));
+  // Cap getUser() to a 3-second max timeout so network latency never triggers 504 MIDDLEWARE_INVOCATION_TIMEOUT
+  const userResult = await withTimeout(
+    supabase.auth.getUser(),
+    3000,
+    { data: { user: null }, error: null }
+  );
+  const user = userResult?.data?.user ?? null;
 
   // Redirect unauthenticated users strictly to /login
   if ((isProtected || isAdmin) && !user) {
@@ -61,61 +84,62 @@ export async function middleware(request: NextRequest) {
   }
 
   // Onboarding route protection check for authenticated users
-  if (user) {
+  const needsOnboardingCheck = 
+    pathname === '/onboarding' || 
+    pathname.startsWith('/dashboard') || 
+    pathname.startsWith('/events') || 
+    pathname.startsWith('/profile');
+
+  if (user && needsOnboardingCheck) {
     try {
       const onboardedCookie = request.cookies.get('nexus_onboarded')?.value === 'true';
+      let isOnboarded = onboardedCookie;
 
-      const { data: prefs } = await supabase
-        .from('user_preferences')
-        .select('onboarding_done')
-        .eq('user_id', user.id)
-        .single();
+      if (!isOnboarded) {
+        const dbFetch = Promise.all([
+          supabase.from('user_preferences').select('onboarding_done').eq('user_id', user.id).single(),
+          supabase.from('users').select('linkedin_url').eq('id', user.id).single(),
+        ]);
 
-      // Also check for a real, valid LinkedIn profile URL. Users created
-      // under the old buggy trigger may have onboarding_done = true but a
-      // corrupted linkedin_url (the LinkedIn homepage/issuer URL instead of
-      // a profile link). Treat those as NOT onboarded so they're routed
-      // back through onboarding, where the existing strict validation
-      // forces them to enter a real https://www.linkedin.com/in/username URL.
-      const { data: profile } = await supabase
-        .from('users')
-        .select('linkedin_url')
-        .eq('id', user.id)
-        .single();
+        const [prefsRes, profileRes] = await withTimeout(
+          dbFetch,
+          2500,
+          [{ data: null }, { data: null }] as any
+        );
 
-      const hasValidLinkedIn = Boolean(
-        profile?.linkedin_url && LINKEDIN_URL_REGEX.test(profile.linkedin_url)
-      );
+        const hasValidLinkedIn = Boolean(
+          profileRes?.data?.linkedin_url && LINKEDIN_URL_REGEX.test(profileRes.data.linkedin_url)
+        );
+        isOnboarded = Boolean(prefsRes?.data?.onboarding_done) && hasValidLinkedIn;
+      }
 
-      const isOnboarded = onboardedCookie || (Boolean(prefs?.onboarding_done) && hasValidLinkedIn);
-
-      // 1. If onboarding is not completed (or linkedin_url is missing/invalid),
-      //    redirect from protected app routes to /onboarding
+      // 1. If onboarding is not completed, redirect to /onboarding
       if (!isOnboarded && pathname !== '/onboarding' && (pathname.startsWith('/dashboard') || pathname.startsWith('/events') || pathname.startsWith('/profile'))) {
         const onboardingUrl = request.nextUrl.clone();
         onboardingUrl.pathname = '/onboarding';
         return NextResponse.redirect(onboardingUrl);
       }
 
-      // 2. If onboarding is already completed, redirect away from /onboarding to /dashboard
+      // 2. If onboarding is completed, redirect away from /onboarding to /dashboard
       if (isOnboarded && pathname === '/onboarding') {
         const dashUrl = request.nextUrl.clone();
         dashUrl.pathname = '/dashboard';
         return NextResponse.redirect(dashUrl);
       }
     } catch {
-      // Continue if DB check fails
+      // Continue if DB check fails or times out
     }
   }
 
   // Admin route check
   if (isAdmin && user) {
     try {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+      const profileRes = await withTimeout(
+        supabase.from('users').select('role').eq('id', user.id).single(),
+        2500,
+        { data: null }
+      );
+      const profile = profileRes?.data;
 
       if (!profile || !['admin', 'founder'].includes(profile.role)) {
         const dashUrl = request.nextUrl.clone();
