@@ -2,7 +2,7 @@
 
 // ===================================================================
 // Nexus v3.0 — Confidential Founder Secret Panel & Reviews Hub
-// Deep navy glassmorphism styling.
+// Warm Black + Soft White + Muted Sage design aesthetic.
 // Strictly password-protected by Founder Secret Passcode (NEXUS2025 / ANUJ2025).
 // Hidden from DOM & redirect enforced for non-founder accounts.
 // Features: Analytics Overview, Ratings, Reviews, Search, Filters, CSV Export.
@@ -99,19 +99,19 @@ export default function FounderSecretPanelPage() {
   // Strict DOM Hide & Redirect for non-founder users
   if (user && !isFounderAccount) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center text-slate-100" style={{ background: 'hsl(222, 47%, 5%)' }}>
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center text-[#F6F7F3]" style={{ background: '#0C0D0C' }}>
         <div
           className="p-4 rounded-3xl mb-4"
-          style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.15)', color: '#F87171' }}
+          style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#F87171' }}
         >
           <Lock className="h-8 w-8" />
         </div>
-        <h1 className="text-xl font-bold text-white">404 — Page Not Found</h1>
-        <p className="text-xs text-slate-400 mt-1 max-w-xs">The requested page does not exist or you do not have permission to view it.</p>
+        <h1 className="text-xl font-bold text-[#F6F7F3]">404 — Page Not Found</h1>
+        <p className="text-xs text-[#757B6E] mt-1 max-w-xs">The requested page does not exist or you do not have permission to view it.</p>
         <Link
           href="/dashboard"
-          className="mt-6 px-5 py-2.5 rounded-xl font-bold text-xs transition-all text-white"
-          style={{ background: 'linear-gradient(135deg, #4263EB, #3451D1)' }}
+          className="mt-6 px-5 py-2.5 rounded-xl font-bold text-xs transition-all text-[#0C0D0C]"
+          style={{ background: '#7E9F85' }}
         >
           Return to Dashboard
         </Link>
@@ -176,31 +176,31 @@ export default function FounderSecretPanelPage() {
   // ── Password Gate Screen ──────────────────────────────────────────────────
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 text-slate-100" style={{ background: 'hsl(222, 47%, 5%)' }}>
+      <div className="min-h-screen flex items-center justify-center p-6 text-[#F6F7F3]" style={{ background: '#0C0D0C' }}>
         <div
-          className="w-full max-w-sm p-8 rounded-3xl space-y-6 backdrop-blur-2xl text-center"
+          className="w-full max-w-sm p-8 rounded-3xl space-y-6 text-center"
           style={{
-            background: 'rgba(255, 255, 255, 0.025)',
-            border: '1px solid rgba(245, 158, 11, 0.15)',
-            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.4)',
+            background: '#141614',
+            border: '1px solid rgba(126, 159, 133, 0.25)',
+            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.5)',
           }}
         >
           <div
             className="p-4 rounded-2xl w-16 h-16 mx-auto flex items-center justify-center"
-            style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.15)' }}
+            style={{ background: 'rgba(126, 159, 133, 0.12)', border: '1px solid rgba(126, 159, 133, 0.25)' }}
           >
-            <Lock className="h-8 w-8 text-amber-400" />
+            <Lock className="h-8 w-8 text-[#7E9F85]" />
           </div>
 
           <div className="space-y-1.5">
             <span
               className="text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-widest inline-block"
-              style={{ background: 'rgba(66, 99, 235, 0.08)', border: '1px solid rgba(66, 99, 235, 0.15)', color: '#7B93F5' }}
+              style={{ background: 'rgba(126, 159, 133, 0.12)', border: '1px solid rgba(126, 159, 133, 0.25)', color: '#A3BDAB' }}
             >
               Founder Secret Panel
             </span>
-            <h2 className="text-xl font-display font-bold text-white pt-1">Enter Secret Passcode</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-xl font-display font-bold text-[#F6F7F3] pt-1">Enter Secret Passcode</h2>
+            <p className="text-xs text-[#757B6E]">
               Confidential ratings, reviews, analytics & controls are protected
             </p>
           </div>
@@ -213,28 +213,28 @@ export default function FounderSecretPanelPage() {
                 placeholder="Enter secret passcode..."
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value)}
-                className="w-full h-12 px-4 rounded-xl text-xs text-white placeholder:text-slate-600 text-center font-mono text-base tracking-widest focus:outline-none transition-all duration-200"
+                className="w-full h-12 px-4 rounded-xl text-xs text-[#F6F7F3] placeholder:text-[#4A4E45] text-center font-mono text-base tracking-widest focus:outline-none transition-all duration-200"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: 'rgba(246, 247, 243, 0.03)',
+                  border: '1px solid rgba(246, 247, 243, 0.08)',
                 }}
-                onFocus={(e) => { e.target.style.borderColor = 'rgba(66, 99, 235, 0.4)'; }}
-                onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'; }}
+                onFocus={(e) => { e.target.style.borderColor = 'rgba(126, 159, 133, 0.5)'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(246, 247, 243, 0.08)'; }}
                 autoFocus
               />
             </div>
 
             <button
               type="submit"
-              className="w-full h-12 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
-              style={{ background: 'linear-gradient(135deg, #4263EB, #3451D1)', boxShadow: '0 4px 16px rgba(66, 99, 235, 0.25)' }}
+              className="w-full h-12 rounded-xl text-[#0C0D0C] font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md hover:brightness-105"
+              style={{ background: '#7E9F85', boxShadow: '0 4px 16px rgba(126, 159, 133, 0.3)' }}
             >
               <KeyRound className="h-4 w-4" />
               Unlock Founder Panel 🔓
             </button>
           </form>
 
-          <p className="text-[11px] text-slate-500 font-medium">
+          <p className="text-[11px] text-[#757B6E] font-medium">
             Strictly Private • Confidential Founder Access
           </p>
         </div>
@@ -244,7 +244,7 @@ export default function FounderSecretPanelPage() {
 
   // ── Unlocked Founder Secret Panel Dashboard ────────────────────────────────
   return (
-    <div className="flex-1 overflow-y-auto pb-20 md:pb-8 text-slate-100" style={{ background: 'hsl(222, 47%, 5%)' }}>
+    <div className="flex-1 overflow-y-auto pb-20 md:pb-8 text-[#F6F7F3]" style={{ background: '#0C0D0C' }}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8 animate-fade-in">
 
         {/* Top Header Controls */}
@@ -253,21 +253,21 @@ export default function FounderSecretPanelPage() {
             <div className="flex items-center gap-2 mb-1">
               <span
                 className="text-[10px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-widest flex items-center gap-1 shrink-0"
-                style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)', color: '#FBBF24' }}
+                style={{ background: 'rgba(126, 159, 133, 0.12)', border: '1px solid rgba(126, 159, 133, 0.25)', color: '#A3BDAB' }}
               >
-                <Crown className="h-3 w-3" /> Founder Control Center
+                <Crown className="h-3 w-3 text-[#7E9F85]" /> Founder Control Center
               </span>
               <span
                 className="text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0"
-                style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10B981' }}
+                style={{ background: 'rgba(126, 159, 133, 0.15)', border: '1px solid rgba(126, 159, 133, 0.3)', color: '#7E9F85' }}
               >
                 Unlocked
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-[#F6F7F3] tracking-tight">
               Founder Analytics & Confidential Reviews
             </h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[#757B6E]">
               Live room metrics, attendee ratings, written reviews, & platform control
             </p>
           </div>
@@ -276,23 +276,23 @@ export default function FounderSecretPanelPage() {
             <button
               onClick={handleLock}
               className="h-10 px-3.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
-              style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.15)', color: '#F87171' }}
+              style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#F87171' }}
             >
               <Lock className="h-3.5 w-3.5" /> Lock Panel
             </button>
 
             <button
               onClick={handleExportCSV}
-              className="h-10 px-3.5 rounded-xl text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors hover:bg-white/[0.06]"
-              style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+              className="h-10 px-3.5 rounded-xl text-[#F6F7F3] text-xs font-semibold flex items-center gap-1.5 transition-colors hover:bg-white/[0.06]"
+              style={{ background: 'rgba(246, 247, 243, 0.05)', border: '1px solid rgba(246, 247, 243, 0.1)' }}
             >
-              <Download className="h-4 w-4" style={{ color: '#4263EB' }} /> Export CSV
+              <Download className="h-4 w-4 text-[#7E9F85]" /> Export CSV
             </button>
 
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="h-10 px-4 rounded-xl text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-md"
-              style={{ background: 'linear-gradient(135deg, #4263EB, #3451D1)' }}
+              className="h-10 px-4 rounded-xl text-[#0C0D0C] text-xs font-bold flex items-center gap-1.5 transition-all shadow-md hover:brightness-105"
+              style={{ background: '#7E9F85' }}
             >
               <CalendarPlus className="h-4 w-4" /> Create Code
             </button>
@@ -302,24 +302,24 @@ export default function FounderSecretPanelPage() {
         {/* ── 1. Analytics Overview Cards Grid ────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: 'Active Users', value: '298', sub: '+42 in last hour', icon: Users, color: '#38bdf8' },
-            { label: 'Room Statistics', value: '14 Active', sub: 'across 3 event codes', icon: BarChart2, color: '#4263EB' },
+            { label: 'Active Users', value: '298', sub: '+42 in last hour', icon: Users, color: '#7E9F85' },
+            { label: 'Room Statistics', value: '14 Active', sub: 'across 3 event codes', icon: BarChart2, color: '#9EB8A4' },
             { label: 'Connections Made', value: '1,420', sub: '100% verified', icon: Zap, color: '#FBBF24' },
-            { label: 'Profile Views', value: '584', sub: '89% response rate', icon: Eye, color: '#10B981' },
+            { label: 'Profile Views', value: '584', sub: '89% response rate', icon: Eye, color: '#7E9F85' },
           ].map((stat) => {
             const Icon = stat.icon;
             return (
               <div
                 key={stat.label}
-                className="p-5 rounded-2xl space-y-2 backdrop-blur-xl"
-                style={{ background: 'rgba(255, 255, 255, 0.025)', border: '1px solid rgba(255, 255, 255, 0.06)' }}
+                className="p-5 rounded-2xl space-y-2"
+                style={{ background: '#141614', border: '1px solid rgba(246, 247, 243, 0.07)' }}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold tracking-wider uppercase text-slate-400">{stat.label}</span>
+                  <span className="text-[10px] font-semibold tracking-wider uppercase text-[#757B6E]">{stat.label}</span>
                   <Icon className="h-4 w-4" style={{ color: stat.color }} />
                 </div>
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
-                <p className="text-[11px] font-semibold" style={{ color: '#10B981' }}>{stat.sub}</p>
+                <p className="text-2xl font-bold text-[#F6F7F3]">{stat.value}</p>
+                <p className="text-[11px] font-semibold text-[#7E9F85]">{stat.sub}</p>
               </div>
             );
           })}
@@ -327,35 +327,35 @@ export default function FounderSecretPanelPage() {
 
         {/* ── 2. Confidential Ratings & Reviews Dashboard ─────────── */}
         <div
-          className="rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6"
+          className="rounded-2xl p-6 sm:p-8 space-y-6"
           style={{
-            background: 'rgba(255, 255, 255, 0.025)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+            background: '#141614',
+            border: '1px solid rgba(246, 247, 243, 0.07)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
           }}
         >
 
           {/* Reviews Header & Avg Rating Banner */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5" style={{ borderBottom: '1px solid rgba(246, 247, 243, 0.06)' }}>
             <div>
               <div
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold mb-2"
-                style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)', color: '#FBBF24' }}
+                style={{ background: 'rgba(126, 159, 133, 0.12)', border: '1px solid rgba(126, 159, 133, 0.25)', color: '#A3BDAB' }}
               >
-                <ShieldCheck className="h-3.5 w-3.5 text-amber-400" />
+                <ShieldCheck className="h-3.5 w-3.5 text-[#7E9F85]" />
                 Confidential Founder Reviews (Strictly Private)
               </div>
-              <h2 className="text-xl font-bold text-white">Attendee Ratings & Written Reviews</h2>
-              <p className="text-xs text-slate-400">Direct feedback submitted by verified event attendees</p>
+              <h2 className="text-xl font-bold text-[#F6F7F3]">Attendee Ratings & Written Reviews</h2>
+              <p className="text-xs text-[#757B6E]">Direct feedback submitted by verified event attendees</p>
             </div>
 
             <div
               className="flex items-center gap-3 p-3 rounded-2xl text-right shrink-0"
-              style={{ background: 'rgba(245, 158, 11, 0.06)', border: '1px solid rgba(245, 158, 11, 0.15)' }}
+              style={{ background: 'rgba(246, 247, 243, 0.03)', border: '1px solid rgba(246, 247, 243, 0.07)' }}
             >
               <div>
                 <p className="text-2xl font-bold text-amber-400">{avgRating} ★</p>
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Average Rating ({INITIAL_REVIEWS.length} Reviews)</p>
+                <p className="text-[10px] font-semibold text-[#757B6E] uppercase tracking-wide">Average Rating ({INITIAL_REVIEWS.length} Reviews)</p>
               </div>
             </div>
           </div>
@@ -364,16 +364,16 @@ export default function FounderSecretPanelPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             {/* Search Input */}
             <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#757B6E]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search reviews by attendee, comment..."
-                className="w-full h-10 pl-10 pr-4 rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none transition-all"
-                style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
-                onFocus={(e) => { e.target.style.borderColor = 'rgba(66, 99, 235, 0.4)'; }}
-                onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'; }}
+                className="w-full h-10 pl-10 pr-4 rounded-xl text-xs text-[#F6F7F3] placeholder:text-[#4A4E45] focus:outline-none transition-all"
+                style={{ background: 'rgba(246, 247, 243, 0.03)', border: '1px solid rgba(246, 247, 243, 0.08)' }}
+                onFocus={(e) => { e.target.style.borderColor = 'rgba(126, 159, 133, 0.5)'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(246, 247, 243, 0.08)'; }}
               />
             </div>
 
@@ -388,15 +388,15 @@ export default function FounderSecretPanelPage() {
                 <button
                   key={tab.key}
                   onClick={() => setRatingFilter(tab.key)}
-                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 border"
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 border active:scale-95"
                   style={ratingFilter === tab.key ? {
-                    background: 'rgba(245, 158, 11, 0.15)',
-                    color: '#FBBF24',
-                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    background: '#7E9F85',
+                    color: '#0C0D0C',
+                    border: '1px solid #7E9F85',
                   } : {
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    color: '#94a3b8',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    background: 'rgba(246, 247, 243, 0.03)',
+                    color: '#757B6E',
+                    border: '1px solid rgba(246, 247, 243, 0.06)',
                   }}
                 >
                   {tab.label}
@@ -406,30 +406,30 @@ export default function FounderSecretPanelPage() {
           </div>
 
           {/* Reviews List */}
-          <div className="rounded-2xl border overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.02)', borderColor: 'rgba(255, 255, 255, 0.05)' }}>
+          <div className="rounded-2xl border overflow-hidden" style={{ background: 'rgba(246, 247, 243, 0.02)', borderColor: 'rgba(246, 247, 243, 0.06)' }}>
             {filteredReviews.length > 0 ? (
               filteredReviews.map((rev, idx, arr) => (
                 <div
                   key={rev.id}
                   className="p-5 space-y-3 hover:bg-white/[0.02] transition-colors"
-                  style={idx < arr.length - 1 ? { borderBottom: '1px solid rgba(255, 255, 255, 0.04)' } : {}}
+                  style={idx < arr.length - 1 ? { borderBottom: '1px solid rgba(246, 247, 243, 0.05)' } : {}}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                     <div className="flex items-center gap-2.5">
-                      <span className="font-bold text-sm text-white">{rev.name}</span>
+                      <span className="font-bold text-sm text-[#F6F7F3]">{rev.name}</span>
                       <span
-                        className="text-[10px] font-semibold px-2.5 py-0.5 rounded-md"
-                        style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#FBBF24', border: '1px solid rgba(245, 158, 11, 0.2)' }}
+                        className="text-[10px] font-semibold px-2.5 py-0.5 rounded-md text-amber-400"
+                        style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}
                       >
                         {rev.rating} ★★★★★
                       </span>
                     </div>
-                    <span className="text-[11px] text-slate-400 font-medium">{rev.time} • {rev.event}</span>
+                    <span className="text-[11px] text-[#757B6E] font-medium">{rev.time} • {rev.event}</span>
                   </div>
 
                   <p
-                    className="text-xs text-slate-300 leading-relaxed italic p-3.5 rounded-xl"
-                    style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.04)' }}
+                    className="text-xs text-[#A7AAA0] leading-relaxed italic p-3.5 rounded-xl"
+                    style={{ background: 'rgba(246, 247, 243, 0.02)', border: '1px solid rgba(246, 247, 243, 0.05)' }}
                   >
                     &ldquo;{rev.comment}&rdquo;
                   </p>
@@ -439,7 +439,11 @@ export default function FounderSecretPanelPage() {
                       <span
                         key={t}
                         className="text-[10px] px-2.5 py-0.5 rounded-md font-semibold"
-                        style={{ background: 'rgba(66, 99, 235, 0.08)', border: '1px solid rgba(66, 99, 235, 0.15)', color: '#7B93F5' }}
+                        style={{
+                          background: 'rgba(126, 159, 133, 0.12)',
+                          border: '1px solid rgba(126, 159, 133, 0.25)',
+                          color: '#A3BDAB',
+                        }}
                       >
                         {t}
                       </span>
@@ -448,7 +452,7 @@ export default function FounderSecretPanelPage() {
                 </div>
               ))
             ) : (
-              <div className="py-12 px-4 text-center text-slate-400 text-xs">
+              <div className="py-12 px-4 text-center text-[#757B6E] text-xs">
                 No reviews found matching your search criteria.
               </div>
             )}

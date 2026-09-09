@@ -92,12 +92,14 @@ function AuthListener({ children }: { children: React.ReactNode }) {
             .select('*')
             .eq('id', session.user.id)
             .single()
-            .then(({ data }) => {
-              hydrateUserProfile(data, session.user);
-            })
-            .catch(() => {
-              hydrateUserProfile(null, session.user);
-            });
+            .then(
+              ({ data }) => {
+                hydrateUserProfile(data, session.user);
+              },
+              () => {
+                hydrateUserProfile(null, session.user);
+              }
+            );
         } else {
           setLoading(false);
         }

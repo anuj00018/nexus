@@ -6,6 +6,7 @@
 // Preserves: All passcode logic, sign-out handler, founder checks.
 // ===================================================================
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -81,55 +82,61 @@ export default function SettingsPageV2() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto pb-20 md:pb-8" style={{ background: 'hsl(222, 47%, 5%)' }}>
-      <div className="max-w-lg mx-auto px-4 py-8 space-y-6 animate-fade-in">
+    <div className="flex-1 overflow-y-auto pb-24 md:pb-8 relative bg-[#030712] text-slate-100 selection:bg-cyan-500/30">
+      {/* Ambient Cyber Aurora Mesh Glows */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="absolute animate-float"
+          style={{
+            top: '10%',
+            left: '20%',
+            width: '540px',
+            height: '420px',
+            background: 'radial-gradient(ellipse, rgba(139, 92, 246, 0.14) 0%, rgba(6, 182, 212, 0.08) 50%, transparent 70%)',
+            filter: 'blur(90px)',
+          }}
+        />
+      </div>
+
+      <div className="relative z-10 max-w-lg mx-auto px-4 py-8 space-y-6 animate-fade-in">
 
         {/* Header Title */}
         <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight">Settings</h1>
+          <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight">
+            Settings
+          </h1>
           <p className="text-xs text-slate-400">Manage your account preferences and privacy</p>
         </div>
 
         {/* ── 1. Account Preferences Glass Card ────────────── */}
         <div
-          className="rounded-2xl overflow-hidden"
-          style={{
-            background: 'rgba(255, 255, 255, 0.025)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-          }}
+          className="rounded-3xl overflow-hidden bg-[#070B19]/85 backdrop-blur-2xl border border-white/[0.08] shadow-[0_16px_48px_rgba(0,0,0,0.5)] hover:border-cyan-500/30 transition-all"
         >
-          <div className="px-5 py-3.5" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#4263EB' }}>Account Preferences</p>
+          <div className="px-6 py-4 border-b border-white/[0.06]">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-400">Account Preferences</p>
           </div>
 
           <div>
             {[
-              { icon: Shield, label: 'Privacy & Visibility', sub: 'Control who sees your profile in rooms' },
-              { icon: Bell, label: 'Room Notifications', sub: 'Direct chat & event alerts' },
-              { icon: Moon, label: 'Appearance', sub: 'System dark/light mode' },
+              { icon: Shield, label: 'Privacy & Visibility', sub: 'Control who sees your profile in rooms', iconColor: 'text-cyan-400', iconBg: 'bg-cyan-500/10 border-cyan-400/25' },
+              { icon: Bell, label: 'Room Notifications', sub: 'Direct chat & event alerts', iconColor: 'text-violet-400', iconBg: 'bg-violet-500/10 border-violet-400/25' },
+              { icon: Moon, label: 'Appearance', sub: 'Cyber Aurora (Active Theme)', iconColor: 'text-fuchsia-400', iconBg: 'bg-fuchsia-500/10 border-fuchsia-400/25' },
             ].map((item, idx, arr) => {
               const Icon = item.icon;
               return (
                 <div
                   key={item.label}
-                  className="flex items-center justify-between px-5 py-4 transition-colors cursor-pointer group hover:bg-white/[0.02]"
-                  style={idx < arr.length - 1 ? { borderBottom: '1px solid rgba(255, 255, 255, 0.04)' } : {}}
+                  className="flex items-center justify-between px-6 py-4 transition-colors cursor-pointer group hover:bg-white/[0.04]"
+                  style={idx < arr.length - 1 ? { borderBottom: '1px solid rgba(255, 255, 255, 0.05)' } : {}}
                 >
                   <div className="flex items-center gap-3.5">
                     <div
-                      className="p-2.5 rounded-xl group-hover:scale-105 transition-transform"
-                      style={{
-                        background: 'rgba(66, 99, 235, 0.08)',
-                        border: '1px solid rgba(66, 99, 235, 0.12)',
-                      }}
+                      className={`p-2.5 rounded-xl border group-hover:scale-105 transition-transform ${item.iconBg}`}
                     >
-                      <Icon className="h-4 w-4" style={{ color: '#4263EB' }} />
+                      <Icon className={`h-4 w-4 ${item.iconColor}`} />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white group-hover:text-blue-300 transition-colors">{item.label}</p>
+                      <p className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">{item.label}</p>
                       <p className="text-xs text-slate-400">{item.sub}</p>
                     </div>
                   </div>
@@ -142,93 +149,65 @@ export default function SettingsPageV2() {
         {/* ── 2. Founder Ratings & Reviews Secret Button ───────────── */}
         {isFounder && (
           <div
-            className="rounded-2xl p-5 flex items-center justify-between transition-all"
-            style={{
-              background: 'rgba(245, 158, 11, 0.06)',
-              border: '1px solid rgba(245, 158, 11, 0.15)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-            }}
+            className="rounded-3xl p-5 flex items-center justify-between transition-all bg-gradient-to-r from-violet-950/40 to-cyan-950/30 border border-cyan-500/30 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_0_20px_rgba(6,182,212,0.12)]"
           >
             <div className="flex items-center gap-3.5">
               <div
-                className="p-3 rounded-xl"
-                style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}
+                className="p-3 rounded-xl bg-violet-500/15 border border-violet-400/30 text-violet-300 shadow-[0_0_12px_rgba(139,92,246,0.2)]"
               >
-                <Crown className="h-5 w-5" style={{ color: '#FBBF24' }} />
+                <Crown className="h-5 w-5 text-violet-400" />
               </div>
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-white">Founder Ratings & Reviews</h3>
-                  <span
-                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider"
-                    style={{
-                      background: 'rgba(245, 158, 11, 0.1)',
-                      border: '1px solid rgba(245, 158, 11, 0.2)',
-                      color: '#FBBF24',
-                    }}
-                  >
-                    Confidential
-                  </span>
+                  <p className="text-sm font-bold text-white">Founder Analytics</p>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 font-bold">LIVE HUD</span>
                 </div>
-                <p className="text-xs text-slate-400">Protected by Founder Authorization</p>
+                <p className="text-xs text-slate-400">Attendee reviews & feedback ratings</p>
               </div>
             </div>
-
-            <button
-              onClick={() => setIsPasscodeModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 shrink-0 flex items-center gap-1.5"
-              style={{
-                background: 'linear-gradient(135deg, #F59E0B, #D97706)',
-                color: '#0A0F1E',
-                boxShadow: '0 4px 16px rgba(245, 158, 11, 0.2)',
-              }}
+            <Link
+              href="/founder/reviews"
+              className="btn-aurora px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 text-white transition-all active:scale-95 shrink-0 shadow-md"
             >
-              Open Inbox 🔒
-            </button>
+              View Ratings <ArrowRight className="h-3 w-3" />
+            </Link>
           </div>
         )}
 
         {/* ── 3. About Application & Founder Links ─────────────────── */}
         <div
-          className="rounded-2xl overflow-hidden"
-          style={{
-            background: 'rgba(255, 255, 255, 0.025)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-          }}
+          className="rounded-3xl overflow-hidden bg-[#070B19]/85 backdrop-blur-2xl border border-white/[0.08] shadow-lg"
         >
-          <div className="px-5 py-3.5" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#4263EB' }}>About Application</p>
+          <div className="px-6 py-4 border-b border-white/[0.06]">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-400">About Application</p>
           </div>
-          <div className="px-5 py-4 space-y-3.5 text-xs">
-            <div className="flex justify-between items-center text-white font-semibold">
+          <div className="px-6 py-4 space-y-3 text-xs">
+            <div className="flex justify-between items-center text-white font-bold">
               <span>Nexus Platform</span>
               <span
-                className="font-mono text-[10px] px-2.5 py-0.5 rounded-md"
-                style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.06)', color: '#94a3b8' }}
-              >v2.1.0</span>
+                className="font-mono text-[10px] px-2.5 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 font-bold"
+              >v3.0 CYBER AURORA</span>
             </div>
             <p className="text-slate-400 leading-relaxed">
-              Meet · Connect · Grow · Real-Time Event Networking Platform
+              Meet · Connect · Grow • Real-Time Event Networking Protocol
             </p>
 
             {/* Small Neat Founder & Nexus LinkedIn Links */}
-            <div className="pt-3 flex flex-wrap items-center gap-3 text-xs font-medium" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <div className="pt-3 flex flex-wrap items-center gap-3 text-xs font-medium border-t border-white/[0.06]">
               <a
                 href="https://www.linkedin.com/in/anuj-vardham-b399253a1"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[#0A66C2] hover:underline font-semibold"
+                className="inline-flex items-center gap-1 text-cyan-300 hover:text-white hover:underline font-bold"
               >
                 Founder: Anuj Vardham <ExternalLink className="h-3 w-3" />
               </a>
-              <span className="text-slate-700">•</span>
+              <span className="text-slate-600">•</span>
               <a
                 href="https://www.linkedin.com/company/join-nexus1"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[#0A66C2] hover:underline font-semibold"
+                className="inline-flex items-center gap-1 text-violet-300 hover:text-white hover:underline font-bold"
               >
                 Nexus Company Page <ExternalLink className="h-3 w-3" />
               </a>
@@ -239,12 +218,7 @@ export default function SettingsPageV2() {
         {/* ── 4. Sign Out Button ──────────────────────────────────── */}
         <button
           onClick={handleSignOut}
-          className="w-full h-13 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all duration-200"
-          style={{
-            background: 'rgba(239, 68, 68, 0.06)',
-            border: '1px solid rgba(239, 68, 68, 0.15)',
-            color: '#F87171',
-          }}
+          className="w-full h-13 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all duration-200 bg-rose-500/10 border border-rose-500/25 text-rose-400 hover:bg-rose-500/20 shadow-sm"
         >
           <LogOut className="h-4 w-4" />
           Sign Out of Nexus

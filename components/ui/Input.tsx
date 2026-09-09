@@ -88,20 +88,20 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             }
             className={cn(
               // Base
-              'flex w-full rounded-lg border bg-background',
-              'px-3 py-2 text-sm text-foreground',
-              'placeholder:text-muted-foreground',
-              // Focus — electric blue glow
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0',
-              'focus-visible:border-ring focus-visible:shadow-glow-subtle',
+              'flex w-full rounded-xl border bg-[#070B19]/80 backdrop-blur-md',
+              'px-3.5 py-2.5 text-sm text-foreground',
+              'placeholder:text-slate-500',
+              // Focus — Cyber Aurora glow (Violet to Cyan)
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyber-violet/50 focus-visible:ring-offset-0',
+              'focus-visible:border-neon-cyan focus-visible:shadow-[0_0_18px_rgba(6,182,212,0.28)]',
               // Transition
-              'transition-all duration-200',
+              'transition-all duration-200 ease-out',
               // Disabled
               'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted',
               // Border states
               hasError
                 ? 'border-destructive focus-visible:ring-destructive/30'
-                : 'border-input hover:border-foreground/20 focus-visible:border-ring',
+                : 'border-white/[0.09] hover:border-cyan-500/40 focus-visible:border-neon-cyan',
               // Icon padding
               leftIcon && 'pl-10',
               (rightElement || isPasswordType) && 'pr-10',
@@ -226,15 +226,16 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           value={value}
           aria-invalid={hasError}
           className={cn(
-            'flex min-h-[80px] w-full rounded-lg border bg-background',
-            'px-3 py-2 text-sm text-foreground resize-none',
-            'placeholder:text-muted-foreground',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            'flex min-h-[90px] w-full rounded-xl border bg-[#070B19]/80 backdrop-blur-md',
+            'px-3.5 py-2.5 text-sm text-foreground resize-none',
+            'placeholder:text-slate-500',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyber-violet/50 focus-visible:ring-offset-0',
+            'focus-visible:border-neon-cyan focus-visible:shadow-[0_0_18px_rgba(6,182,212,0.25)]',
             'disabled:cursor-not-allowed disabled:opacity-50',
-            'transition-all duration-150',
+            'transition-all duration-200 ease-out',
             hasError
               ? 'border-destructive focus-visible:ring-destructive/30'
-              : 'border-input hover:border-foreground/30',
+              : 'border-white/[0.09] hover:border-cyan-500/40 focus-visible:border-neon-cyan',
             className
           )}
           {...props}

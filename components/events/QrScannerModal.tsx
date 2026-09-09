@@ -67,12 +67,6 @@ export function QrScannerModal({ isOpen, onClose, onScanSuccess }: QrScannerModa
     }
   };
 
-  const handleSimulatedScan = (code: string) => {
-    toast.success(`Scanned QR Code: ${code}!`);
-    onScanSuccess(code);
-    onClose();
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -125,7 +119,7 @@ export function QrScannerModal({ isOpen, onClose, onScanSuccess }: QrScannerModa
               <Camera className="h-10 w-10 animate-pulse" style={{ color: '#4263EB' }} />
               <p className="text-xs text-slate-400 font-medium">
                 {hasCameraPermission === false
-                  ? 'Camera permission unavailable. Choose a quick QR code below to test:'
+                  ? 'Camera permission unavailable. Please grant camera access to scan event QR codes.'
                   : 'Starting camera stream...'}
               </p>
             </div>
@@ -158,37 +152,6 @@ export function QrScannerModal({ isOpen, onClose, onScanSuccess }: QrScannerModa
             <Zap className="h-3 w-3 text-emerald-400" />
             Auto-Detect Enabled
           </span>
-        </div>
-
-        {/* Simulated Demo QR Buttons */}
-        <div className="p-4 space-y-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
-            Test Quick-Scan Demo Codes
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { code: 'NEXUS1', title: 'TechFest 2025' },
-              { code: 'NEXUS2', title: 'Startup Meetup' },
-              { code: 'NEXUS3', title: 'AI Hackathon' },
-            ].map((item) => (
-              <button
-                key={item.code}
-                onClick={() => handleSimulatedScan(item.code)}
-                className="flex flex-col items-center justify-center p-2.5 rounded-xl transition-all text-center group"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                }}
-              >
-                <span className="text-xs font-bold text-white group-hover:text-blue-400">
-                  {item.code}
-                </span>
-                <span className="text-[10px] text-slate-400 truncate w-full">
-                  {item.title}
-                </span>
-              </button>
-            ))}
-          </div>
         </div>
       </div>
     </div>

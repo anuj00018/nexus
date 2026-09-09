@@ -58,7 +58,7 @@ function CardSkeleton() {
 
 export default function NearbyPageV2() {
   const params = useParams();
-  const rawId = (params?.id as string) || 'demo-1';
+  const rawId = (params?.id as string) || 'nexus1';
   const eventId = rawId.toLowerCase();
   const router = useRouter();
 
@@ -71,18 +71,18 @@ export default function NearbyPageV2() {
 
   // Sync real room participants across devices
   const syncRoomParticipants = useCallback(async () => {
-    if (!user) return;
-
     try {
-      // 1. Announce active authenticated user to room API
-      await fetch('/api/room', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, user }),
-      });
+      // 1. Announce active authenticated user to room API if present
+      if (user && user.name && !user.name.startsWith('Attendee #')) {
+        await fetch('/api/room', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventId, user }),
+        });
+      }
 
-      // 2. Fetch all real participants in this room
-      const res = await fetch(`/api/room?eventId=${eventId}`);
+      // 2. Fetch all real participants in this room (always, with no-store cache)
+      const res = await fetch(`/api/room?eventId=${eventId}`, { cache: 'no-store' });
       const data = await res.json();
 
       if (data.success && Array.isArray(data.participants)) {
@@ -179,17 +179,13 @@ export default function NearbyPageV2() {
   }, [people, searchQuery, filter]);
 
   return (
-    <div className="min-h-screen flex flex-col pb-20 md:pb-6" style={{ background: 'hsl(222, 47%, 5%)' }}>
+    <div className="min-h-screen flex flex-col pb-24 md:pb-8 bg-[#030712] text-slate-100 selection:bg-cyan-500/30">
       {/* Event Subheader Navigation */}
       <EventHeaderNav eventId={eventId} eventTitle={`Event Room [${eventId.toUpperCase()}]`} activeCount={people.length} />
 
       {/* Sticky Search & Filter Toolbar */}
       <div
-        className="backdrop-blur-xl border-b sticky top-14 z-30 py-3.5 px-4 sm:px-6 space-y-3 shadow-xl"
-        style={{
-          background: 'rgba(10, 15, 30, 0.85)',
-          borderColor: 'rgba(255, 255, 255, 0.06)',
-        }}
+        className="backdrop-blur-2xl border-b sticky top-14 z-30 py-3.5 px-4 sm:px-6 space-y-3 shadow-2xl bg-[#070B19]/90 border-white/[0.08]"
       >
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
 
@@ -201,13 +197,7 @@ export default function NearbyPageV2() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name, company, goals..."
-              className="w-full h-10 pl-10 pr-4 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none transition-all duration-200"
-              style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-              }}
-              onFocus={(e) => { e.target.style.borderColor = 'rgba(66, 99, 235, 0.4)'; }}
-              onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'; }}
+              className="w-full h-10 pl-10 pr-4 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none transition-all duration-200 bg-[#030712]/80 border border-white/[0.09] focus:border-cyan-400 focus:shadow-[0_0_15px_rgba(6,182,212,0.25)]"
             />
           </div>
 
@@ -227,14 +217,14 @@ export default function NearbyPageV2() {
                   'px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 active:scale-95 border'
                 )}
                 style={filter === tab.key ? {
-                  background: 'linear-gradient(135deg, #4263EB, #3451D1)',
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%)',
                   color: '#ffffff',
-                  borderColor: 'rgba(66, 99, 235, 0.5)',
-                  boxShadow: '0 4px 12px rgba(66, 99, 235, 0.25)',
+                  borderColor: 'rgba(6, 182, 212, 0.6)',
+                  boxShadow: '0 0 16px rgba(6, 182, 212, 0.35)',
                 } : {
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  color: '#94a3b8',
-                  borderColor: 'rgba(255, 255, 255, 0.06)',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  color: '#94A3B8',
+                  borderColor: 'rgba(255, 255, 255, 0.07)',
                 }}
               >
                 {tab.label}
@@ -251,8 +241,7 @@ export default function NearbyPageV2() {
                   toast.success('Room link copied to clipboard!');
                 }
               }}
-              className="p-2 rounded-xl text-slate-300 transition-colors shrink-0 hover:bg-white/[0.06]"
-              style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}
+              className="p-2 rounded-xl text-slate-300 transition-colors shrink-0 hover:bg-white/[0.08] bg-white/[0.04] border border-white/[0.08]"
               title="Share Room Link"
             >
               <Share2 className="h-4 w-4" />
@@ -268,12 +257,7 @@ export default function NearbyPageV2() {
                 toast.success('Exited Event Room');
                 router.push('/dashboard');
               }}
-              className="px-3.5 py-1.5 rounded-xl active:scale-95 transition-all text-xs font-semibold flex items-center gap-1.5"
-              style={{
-                background: 'rgba(239, 68, 68, 0.08)',
-                border: '1px solid rgba(239, 68, 68, 0.15)',
-                color: '#F87171',
-              }}
+              className="px-3.5 py-1.5 rounded-xl active:scale-95 transition-all text-xs font-semibold flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/25 text-rose-400 hover:bg-rose-500/20"
             >
               <LogOut className="h-3.5 w-3.5" /> Exit Room
             </button>
@@ -283,8 +267,7 @@ export default function NearbyPageV2() {
                 setIsLoading(true);
                 syncRoomParticipants();
               }}
-              className="p-2 rounded-xl text-slate-300 transition-colors shrink-0 hover:bg-white/[0.06]"
-              style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}
+              className="p-2 rounded-xl text-slate-300 transition-colors shrink-0 hover:bg-white/[0.08] bg-white/[0.04] border border-white/[0.08]"
               title="Refresh Room"
             >
               <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
@@ -306,18 +289,17 @@ export default function NearbyPageV2() {
             <CardSkeleton />
           </div>
         ) : filteredPeople.length === 0 ? (
-          /* Clean Minimal Empty State */
+          /* Clean Cyber Empty State */
           <div className="py-24 px-6 text-center space-y-4 max-w-md mx-auto animate-fade-in">
             <div
-              className="p-4 rounded-3xl w-16 h-16 mx-auto flex items-center justify-center"
-              style={{ background: 'rgba(66, 99, 235, 0.08)', border: '1px solid rgba(66, 99, 235, 0.15)' }}
+              className="p-4 rounded-3xl w-16 h-16 mx-auto flex items-center justify-center bg-cyan-500/10 border border-cyan-400/30 shadow-[0_0_20px_rgba(6,182,212,0.15)]"
             >
-              <Users className="h-8 w-8 text-indigo-400" style={{ color: '#4263EB' }} />
+              <Users className="h-8 w-8 text-cyan-400" />
             </div>
             <div className="space-y-1.5">
               <h3 className="font-bold text-lg text-white tracking-tight">No matching participants found</h3>
               <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
-                Share event code <span className="font-mono font-bold uppercase px-2 py-0.5 rounded" style={{ background: 'rgba(66, 99, 235, 0.1)', color: '#7B93F5' }}>{eventId}</span> with colleagues to start networking in real time.
+                Share event code <span className="font-mono font-bold uppercase px-2 py-0.5 rounded text-cyan-300 bg-cyan-500/15 border border-cyan-400/30">{eventId}</span> with colleagues to start networking in real time.
               </p>
             </div>
           </div>
@@ -332,19 +314,7 @@ export default function NearbyPageV2() {
               return (
                 <div
                   key={person.id}
-                  className="rounded-2xl p-6 shadow-xl transition-all duration-300 backdrop-blur-xl flex flex-col justify-between space-y-5 hover:-translate-y-1"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.025)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(66, 99, 235, 0.2)';
-                    (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(66, 99, 235, 0.06)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.06)';
-                    (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
-                  }}
+                  className="rounded-3xl p-6 shadow-xl transition-all duration-300 backdrop-blur-xl flex flex-col justify-between space-y-5 bg-[#070B19]/80 border border-white/[0.08] hover:border-cyan-500/40 hover:shadow-[0_16px_40px_rgba(0,0,0,0.6),0_0_24px_rgba(6,182,212,0.18)] hover:-translate-y-1"
                 >
                   <div className="space-y-4">
                     {/* Header Row: Avatar, Name, Badges & Match % */}
@@ -353,8 +323,7 @@ export default function NearbyPageV2() {
                         <div className="relative shrink-0 mt-0.5">
                           <Avatar src={person.avatar_url} alt={person.name} size="lg" />
                           <span
-                            className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500"
-                            style={{ border: '2px solid hsl(222, 47%, 5%)' }}
+                            className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-cyan-400 border-2 border-[#030712] shadow-[0_0_8px_rgba(6,182,212,0.8)]"
                           />
                         </div>
 
@@ -365,34 +334,24 @@ export default function NearbyPageV2() {
                             {/* Founder Badge */}
                             {isFounder && (
                               <span
-                                className="text-[10px] px-2 py-0.5 rounded-md font-semibold flex items-center gap-1 shrink-0"
-                                style={{
-                                  background: 'rgba(245, 158, 11, 0.1)',
-                                  border: '1px solid rgba(245, 158, 11, 0.2)',
-                                  color: '#FBBF24',
-                                }}
+                                className="text-[10px] px-2 py-0.5 rounded-md font-bold flex items-center gap-1 shrink-0 bg-violet-500/15 border border-violet-400/35 text-violet-300 shadow-[0_0_8px_rgba(139,92,246,0.2)]"
                               >
-                                <Crown className="h-3 w-3" /> Founder
+                                <Crown className="h-3 w-3 text-violet-400" /> Founder
                               </span>
                             )}
 
                             {/* LinkedIn Verified Badge */}
                             <span
-                              className="text-[10px] px-2 py-0.5 rounded-md font-semibold flex items-center gap-1 shrink-0"
-                              style={{
-                                background: 'rgba(56, 189, 248, 0.08)',
-                                border: '1px solid rgba(56, 189, 248, 0.15)',
-                                color: '#38bdf8',
-                              }}
+                              className="text-[10px] px-2 py-0.5 rounded-md font-bold flex items-center gap-1 shrink-0 bg-cyan-500/15 border border-cyan-400/35 text-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.2)]"
                             >
-                              <ShieldCheck className="h-3 w-3 text-sky-400" /> Verified
+                              <ShieldCheck className="h-3 w-3 text-cyan-400" /> Verified
                             </span>
                           </div>
 
                           {/* Company / Organization */}
                           {person.company && (
                             <p className="text-xs text-slate-400 flex items-center gap-1.5 font-medium truncate">
-                              <Building2 className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                              <Building2 className="h-3.5 w-3.5 text-violet-400 shrink-0" />
                               {person.company}
                             </p>
                           )}
@@ -401,14 +360,9 @@ export default function NearbyPageV2() {
 
                       {/* Match Percentage Badge */}
                       <div
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0"
-                        style={{
-                          background: 'rgba(66, 99, 235, 0.08)',
-                          border: '1px solid rgba(66, 99, 235, 0.15)',
-                          color: '#7B93F5',
-                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 bg-gradient-to-r from-violet-500/20 to-cyan-500/20 border border-cyan-400/35 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]"
                       >
-                        <Sparkles className="h-3 w-3" style={{ color: '#4263EB' }} />
+                        <Sparkles className="h-3 w-3 text-cyan-400" />
                         {matchScore}% Match
                       </div>
                     </div>
@@ -416,8 +370,7 @@ export default function NearbyPageV2() {
                     {/* Bio (if provided) */}
                     {person.bio && (
                       <p
-                        className="text-xs text-slate-300 line-clamp-2 leading-relaxed italic p-3 rounded-xl"
-                        style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.04)' }}
+                        className="text-xs text-slate-300 line-clamp-2 leading-relaxed italic p-3 rounded-xl bg-[#030712]/60 border border-white/[0.06]"
                       >
                         &ldquo;{person.bio}&rdquo;
                       </p>
@@ -426,17 +379,12 @@ export default function NearbyPageV2() {
                     {/* "Looking For" Goals */}
                     {person.looking_for?.length > 0 && (
                       <div className="space-y-1.5">
-                        <span className="text-[10px] font-semibold tracking-widest uppercase block" style={{ color: '#4263EB' }}>Looking For</span>
+                        <span className="text-[10px] font-bold tracking-widest uppercase block text-cyan-400">Looking For</span>
                         <div className="flex flex-wrap gap-1.5">
                           {person.looking_for.map((goal: string) => (
                             <span
                               key={goal}
-                              className="text-xs px-2.5 py-1 rounded-lg font-medium"
-                              style={{
-                                background: 'rgba(66, 99, 235, 0.08)',
-                                border: '1px solid rgba(66, 99, 235, 0.15)',
-                                color: '#7B93F5',
-                              }}
+                              className="text-xs px-2.5 py-1 rounded-lg font-semibold bg-cyan-500/10 border border-cyan-400/25 text-cyan-200"
                             >
                               {goal}
                             </span>
@@ -451,12 +399,7 @@ export default function NearbyPageV2() {
                         {person.interests.map((s: string) => (
                           <span
                             key={s}
-                            className="text-[11px] px-2.5 py-0.5 rounded-md font-medium"
-                            style={{
-                              background: 'rgba(139, 92, 246, 0.08)',
-                              border: '1px solid rgba(139, 92, 246, 0.15)',
-                              color: '#A78BFA',
-                            }}
+                            className="text-[11px] px-2.5 py-0.5 rounded-md font-medium bg-white/[0.04] border border-white/[0.08] text-slate-300"
                           >
                             {s}
                           </span>
@@ -465,8 +408,8 @@ export default function NearbyPageV2() {
                     )}
                   </div>
 
-                  {/* Action Buttons: LinkedIn Profile & Chat (Self Messaging Disabled) */}
-                  <div className="pt-4 flex items-center gap-2.5" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  {/* Action Buttons: LinkedIn Profile & Chat */}
+                  <div className="pt-4 flex items-center gap-2.5 border-t border-white/[0.08]">
                     <a
                       href={getLinkedInHref(person.linkedin_url, person.name)}
                       target="_blank"
@@ -480,11 +423,7 @@ export default function NearbyPageV2() {
                           finalUrlOpened: finalUrl,
                         });
                       }}
-                      className="flex-1 h-11 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 text-white active:scale-95 transition-all shadow-md no-underline"
-                      style={{
-                        background: '#0A66C2',
-                        boxShadow: '0 4px 16px rgba(10, 102, 194, 0.25)',
-                      }}
+                      className="flex-1 h-11 rounded-xl font-bold text-xs flex items-center justify-center gap-2 text-white active:scale-95 transition-all shadow-md no-underline hover:brightness-110 bg-[#0A66C2] shadow-[0_4px_16px_rgba(10,102,194,0.35)]"
                     >
                       <Linkedin className="h-4 w-4 fill-white shrink-0" />
                       LinkedIn Profile ↗
@@ -493,22 +432,16 @@ export default function NearbyPageV2() {
                     {!isCurrentUser ? (
                       <button
                         onClick={() => setActiveChatRecipient(person)}
-                        className="flex-1 h-11 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all shrink-0"
-                        style={{
-                          background: 'rgba(66, 99, 235, 0.08)',
-                          border: '1px solid rgba(66, 99, 235, 0.15)',
-                          color: '#7B93F5',
-                        }}
+                        className="flex-1 h-11 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all shrink-0 bg-violet-600/15 border border-violet-500/30 text-violet-300 hover:bg-violet-600/25 hover:border-violet-400/50 shadow-[0_0_12px_rgba(139,92,246,0.15)]"
                       >
-                        <MessageSquare className="h-4 w-4" />
+                        <MessageSquare className="h-4 w-4 text-violet-400" />
                         Chat In-App
                       </button>
                     ) : (
                       <div
-                        className="px-4 h-11 rounded-xl text-slate-400 text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0"
-                        style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.04)' }}
+                        className="px-4 h-11 rounded-xl text-slate-400 text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0 bg-white/[0.03] border border-white/[0.07]"
                       >
-                        <User className="h-3.5 w-3.5" />
+                        <User className="h-3.5 w-3.5 text-cyan-400" />
                         You
                       </div>
                     )}

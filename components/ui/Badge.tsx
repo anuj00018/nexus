@@ -1,8 +1,7 @@
 /**
- * Nexus Badge Component
+ * Nexus Badge Component — Cyber Aurora Edition
  *
- * Small label chips for status, categories, interests, and skills.
- * Used extensively on profile cards and event listings.
+ * Luminous micro-badges for status, interests, match percentages, and skills.
  */
 
 import * as React from 'react';
@@ -13,35 +12,39 @@ import { cn } from '@/lib/utils';
 // ─── Badge Variants ───────────────────────────────────────────────────
 const badgeVariants = cva(
   [
-    'inline-flex items-center gap-1',
-    'rounded-full font-medium',
-    'transition-colors duration-150',
+    'inline-flex items-center gap-1.5',
+    'rounded-full font-semibold',
+    'transition-all duration-150',
     'select-none',
   ],
   {
     variants: {
       variant: {
-        default: 'bg-primary/10 text-primary border border-primary/20',
-        accent:  'bg-nexus-electric/10 text-nexus-electric border border-nexus-electric/20 dark:bg-nexus-electric/15',
-        success: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20',
-        warning: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border border-yellow-500/20',
-        destructive: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20',
-        muted: 'bg-muted text-muted-foreground border border-border',
-        outline: 'bg-transparent border border-border text-foreground',
-        glass: 'bg-white/[0.06] text-white/80 border border-white/[0.08] backdrop-blur-sm',
+        default: 'bg-white/[0.08] text-white border border-white/[0.12]',
+        accent:  'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]',
+        cyan:    'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]',
+        violet:  'bg-violet-500/15 text-violet-300 border border-violet-500/30 shadow-[0_0_10px_rgba(139,92,246,0.2)]',
+        aurora:  'bg-gradient-to-r from-violet-500/20 to-cyan-500/20 text-cyan-200 border border-cyan-400/40 shadow-[0_0_15px_rgba(6,182,212,0.25)]',
+        sage:    'bg-violet-500/15 text-violet-300 border border-violet-500/30',
+        success: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]',
+        warning: 'bg-amber-500/15 text-amber-300 border border-amber-500/30',
+        destructive: 'bg-rose-500/15 text-rose-300 border border-rose-500/30',
+        muted: 'bg-white/[0.04] text-slate-400 border border-white/[0.06]',
+        outline: 'bg-transparent border border-white/[0.15] text-white',
+        glass: 'bg-[#0F172A]/70 text-slate-200 border border-white/[0.1] backdrop-blur-md',
         // Status-specific badges
-        available: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20',
-        busy: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20',
-        coffee: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20',
+        available: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30',
+        busy: 'bg-rose-500/15 text-rose-300 border border-rose-500/30',
+        coffee: 'bg-amber-500/15 text-amber-300 border border-amber-500/30',
         // Goal badges
-        hiring: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20',
-        seeking: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/20',
+        hiring: 'bg-violet-500/15 text-violet-300 border border-violet-500/30',
+        seeking: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30',
       },
       size: {
         xs: 'text-2xs px-2 py-0.5',
         sm: 'text-xs px-2.5 py-0.5',
-        md: 'text-sm px-3 py-1',
-        lg: 'text-base px-4 py-1.5',
+        md: 'text-xs px-3 py-1',
+        lg: 'text-sm px-3.5 py-1.5',
       },
     },
     defaultVariants: {
@@ -101,13 +104,10 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
         )}
 
         {/* Leading icon */}
-        {icon && (
-          <span className="shrink-0 leading-none" aria-hidden="true">
-            {icon}
-          </span>
-        )}
+        {icon && <span className="shrink-0">{icon}</span>}
 
-        {children}
+        {/* Content */}
+        <span>{children}</span>
 
         {/* Remove button */}
         {removable && (
@@ -117,7 +117,7 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
               e.stopPropagation();
               onRemove?.();
             }}
-            className="ml-0.5 rounded-full hover:bg-current/20 p-0.5 transition-colors"
+            className="ml-0.5 hover:opacity-80 rounded-full focus:outline-none"
             aria-label="Remove"
           >
             <X className="h-3 w-3" />

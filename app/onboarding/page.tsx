@@ -2,14 +2,14 @@
 
 // ===================================================================
 // Nexus v3.0 — First-Time Profile Onboarding
-// Premium glass card form with ambient glow.
+// Pure Black (#000000) Background + Aligned Electric Blue (#2563EB / #3B82F6) Buttons & Accents.
 // Preserves: All form state, API & Supabase upserts, validation, router logic.
 // Includes: Strict LinkedIn Profile URL validation (https://www.linkedin.com/in/username).
 // Saves profile permanently so user is NEVER asked for onboarding again.
 // ===================================================================
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, User, Building2, ShieldCheck, Linkedin } from 'lucide-react';
+import { ArrowRight, User, Building2, ShieldCheck, Linkedin, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { NexusIcon } from '@/components/ui/Logo';
 import { createClient } from '@/lib/supabase/client';
@@ -129,6 +129,7 @@ export default function OnboardingPage() {
       try {
         localStorage.setItem('nexus_user_profile', JSON.stringify(updatedUser));
         document.cookie = `nexus_onboarded=true; path=/; max-age=31536000; SameSite=Lax`;
+        document.cookie = `nexus_demo_session=true; path=/; max-age=31536000; SameSite=Lax`;
       } catch (e) {
         console.warn('Storage warning:', e);
       }
@@ -168,81 +169,110 @@ export default function OnboardingPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col justify-between p-5 py-8 overflow-hidden relative"
-      style={{ background: 'linear-gradient(145deg, #050a18 0%, #0a0f1e 40%, #0d1225 100%)' }}
+      className="min-h-screen flex flex-col justify-between p-4 sm:p-8 overflow-x-hidden relative"
+      style={{ background: '#000000' }}
     >
-      {/* Ambient glow */}
-      <div className="absolute inset-0 pointer-events-none">
+      {/* ── Deep Pure Black Ambient Lighting ─────────────────────── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Deep electric blue ambient backglow */}
         <div
           className="absolute animate-float"
           style={{
-            top: '5%',
-            right: '20%',
-            width: '500px',
-            height: '400px',
-            background: 'radial-gradient(ellipse, rgba(66, 99, 235, 0.08) 0%, transparent 70%)',
+            top: '2%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '650px',
+            height: '420px',
+            background: 'radial-gradient(ellipse, rgba(37, 99, 235, 0.15) 0%, transparent 70%)',
+            filter: 'blur(95px)',
+          }}
+        />
+        {/* Soft cyan-blue accent orb */}
+        <div
+          className="absolute animate-float"
+          style={{
+            bottom: '5%',
+            right: '10%',
+            width: '450px',
+            height: '350px',
+            background: 'radial-gradient(ellipse, rgba(59, 130, 246, 0.10) 0%, transparent 70%)',
             filter: 'blur(80px)',
+            animationDirection: 'reverse',
           }}
         />
       </div>
 
-      <div className="relative z-10 max-w-lg mx-auto w-full space-y-6 my-auto">
+      <div className="relative z-10 max-w-xl mx-auto w-full space-y-6 my-auto animate-fade-in">
 
-        {/* Header */}
-        <div className="flex items-center gap-3 pb-5" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
+        {/* ── Card Header ────────────────────────────────────────── */}
+        <div className="flex items-center gap-3 pb-5" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
           <div
-            className="rounded-2xl p-0.5"
-            style={{ background: 'linear-gradient(135deg, rgba(66, 99, 235, 0.3), rgba(139, 92, 246, 0.2))' }}
+            className="rounded-2xl p-1 shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.4), rgba(15, 23, 42, 0.9))',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              boxShadow: '0 4px 16px rgba(37, 99, 235, 0.25)',
+            }}
           >
-            <NexusIcon size={48} />
+            <NexusIcon size={44} />
           </div>
           <div>
-            <span className="text-2xs font-semibold tracking-widest uppercase" style={{ color: '#4263EB' }}>
-              LinkedIn Verified Profile Setup
-            </span>
-            <h1 className="text-xl font-display font-bold text-white leading-tight">Complete Your Profile</h1>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-bold tracking-wider uppercase text-[#3B82F6] flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-[#3B82F6]" />
+                LinkedIn Verified Profile Setup
+              </span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-[#FFFFFF] leading-tight mt-0.5">
+              Complete Your Profile
+            </h1>
           </div>
         </div>
 
-        {/* Glass form card */}
+        {/* ── Main Obsidian Glass Card ───────────────────────────── */}
         <div
-          className="rounded-2xl p-6 sm:p-8"
+          className="rounded-3xl p-6 sm:p-9 space-y-6 backdrop-blur-2xl"
           style={{
-            background: 'rgba(255, 255, 255, 0.02)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
+            background: '#090A0D',
+            border: '1px solid rgba(255, 255, 255, 0.09)',
+            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.8), 0 0 40px rgba(37, 99, 235, 0.08)',
           }}
         >
-          <form onSubmit={handleCompleteProfile} className="space-y-5">
+          <form onSubmit={handleCompleteProfile} className="space-y-6">
 
             {/* 1. Full Name & Profile Photo URL */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="block text-2xs font-semibold tracking-wider uppercase" style={{ color: '#4263EB' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="block text-[11px] font-bold tracking-wider uppercase text-[#60A5FA]">
                   Full Name *
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                  <User className="absolute left-3.5 top-3.5 h-4 w-4 text-[#64748B]" />
                   <input
                     type="text"
                     required
                     placeholder="e.g. Alex Rivera"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full h-11 pl-10 pr-3.5 rounded-xl text-xs text-white placeholder:text-slate-600 font-medium focus:outline-none transition-all duration-200"
+                    className="w-full h-12 pl-10 pr-4 rounded-xl text-xs text-white placeholder:text-[#475569] font-medium focus:outline-none transition-all duration-200"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      background: '#0D0E13',
+                      border: '1px solid rgba(255, 255, 255, 0.09)',
                     }}
-                    onFocus={(e) => { e.target.style.borderColor = 'rgba(66, 99, 235, 0.4)'; e.target.style.boxShadow = '0 0 0 3px rgba(66, 99, 235, 0.08)'; }}
-                    onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'; e.target.style.boxShadow = 'none'; }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#3B82F6';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.2)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.09)';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-2xs font-semibold tracking-wider uppercase" style={{ color: '#4263EB' }}>
+              <div className="space-y-2">
+                <label className="block text-[11px] font-bold tracking-wider uppercase text-[#60A5FA]">
                   Profile Photo URL (Optional)
                 </label>
                 <input
@@ -250,72 +280,94 @@ export default function OnboardingPage() {
                   placeholder="https://..."
                   value={avatarUrl}
                   onChange={(e) => setAvatarUrl(e.target.value)}
-                  className="w-full h-11 px-3.5 rounded-xl text-xs text-white placeholder:text-slate-600 font-mono text-2xs focus:outline-none transition-all duration-200"
+                  className="w-full h-12 px-4 rounded-xl text-xs text-white placeholder:text-[#475569] font-mono text-[11px] focus:outline-none transition-all duration-200"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: '#0D0E13',
+                    border: '1px solid rgba(255, 255, 255, 0.09)',
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = 'rgba(66, 99, 235, 0.4)'; e.target.style.boxShadow = '0 0 0 3px rgba(66, 99, 235, 0.08)'; }}
-                  onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'; e.target.style.boxShadow = 'none'; }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3B82F6';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.2)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.09)';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
               </div>
             </div>
 
             {/* 2. LinkedIn Profile URL */}
-            <div className="space-y-1.5">
-              <label className="block text-2xs font-semibold tracking-wider uppercase flex items-center justify-between" style={{ color: '#4263EB' }}>
-                <span>LinkedIn Profile URL *</span>
-                <span className="text-slate-500 font-normal normal-case tracking-normal">Must be /in/username</span>
-              </label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold tracking-wider uppercase text-[#60A5FA]">
+                  LinkedIn Profile URL *
+                </label>
+                <span className="text-[10px] text-[#64748B] font-medium">Must be /in/username</span>
+              </div>
               <div className="relative">
-                <Linkedin className="absolute left-3.5 top-3.5 h-4 w-4 text-sky-400" />
+                <Linkedin className="absolute left-3.5 top-3.5 h-4 w-4 text-[#0A66C2]" />
                 <input
                   type="url"
                   required
                   placeholder="https://www.linkedin.com/in/username"
                   value={linkedinUrl}
                   onChange={(e) => setLinkedinUrl(e.target.value)}
-                  className="w-full h-11 pl-10 pr-3.5 rounded-xl text-xs text-white placeholder:text-slate-600 font-medium focus:outline-none transition-all duration-200"
+                  className="w-full h-12 pl-10 pr-4 rounded-xl text-xs text-white placeholder:text-[#475569] font-medium focus:outline-none transition-all duration-200"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: '#0D0E13',
+                    border: '1px solid rgba(255, 255, 255, 0.09)',
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = 'rgba(66, 99, 235, 0.4)'; e.target.style.boxShadow = '0 0 0 3px rgba(66, 99, 235, 0.08)'; }}
-                  onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'; e.target.style.boxShadow = 'none'; }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3B82F6';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.2)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.09)';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
               </div>
             </div>
 
             {/* 3. College / Company */}
-            <div className="space-y-1.5">
-              <label className="block text-2xs font-semibold tracking-wider uppercase" style={{ color: '#4263EB' }}>
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold tracking-wider uppercase text-[#60A5FA]">
                 College / Company
               </label>
               <div className="relative">
-                <Building2 className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                <Building2 className="absolute left-3.5 top-3.5 h-4 w-4 text-[#64748B]" />
                 <input
                   type="text"
                   placeholder="e.g. Stanford University or Google"
                   value={organization}
                   onChange={(e) => setOrganization(e.target.value)}
-                  className="w-full h-11 pl-10 pr-3.5 rounded-xl text-xs text-white placeholder:text-slate-600 font-medium focus:outline-none transition-all duration-200"
+                  className="w-full h-12 pl-10 pr-4 rounded-xl text-xs text-white placeholder:text-[#475569] font-medium focus:outline-none transition-all duration-200"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: '#0D0E13',
+                    border: '1px solid rgba(255, 255, 255, 0.09)',
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = 'rgba(66, 99, 235, 0.4)'; e.target.style.boxShadow = '0 0 0 3px rgba(66, 99, 235, 0.08)'; }}
-                  onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'; e.target.style.boxShadow = 'none'; }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3B82F6';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.2)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.09)';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
               </div>
             </div>
 
-            {/* 4. Looking For (Multi-Select) */}
-            <div className="space-y-2">
-              <label className="block text-2xs font-semibold tracking-wider uppercase flex items-center justify-between" style={{ color: '#4263EB' }}>
-                <span>What Are You Looking For? *</span>
-                <span className="text-slate-500 font-normal normal-case tracking-normal">Select all that apply</span>
-              </label>
-              <div className="flex flex-wrap gap-1.5">
+            {/* 4. What Are You Looking For? (Aligned Blue Buttons) */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold tracking-wider uppercase text-[#60A5FA]">
+                  What Are You Looking For? *
+                </label>
+                <span className="text-[10px] text-[#64748B] font-medium">Select all that apply</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
                 {LOOKING_FOR_OPTIONS.map((opt) => {
                   const isSelected = selectedLookingFor.includes(opt.id);
                   return (
@@ -324,32 +376,34 @@ export default function OnboardingPage() {
                       type="button"
                       onClick={() => toggleItem(selectedLookingFor, opt.id, setSelectedLookingFor)}
                       className={cn(
-                        'text-xs px-3 py-1.5 rounded-xl font-medium transition-all duration-200',
+                        'h-9 px-3.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95',
                         isSelected
-                          ? 'text-white shadow-glow-blue-sm'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'text-white'
+                          : 'text-[#94A3B8] hover:text-white'
                       )}
                       style={isSelected ? {
-                        background: 'rgba(66, 99, 235, 0.2)',
-                        border: '1px solid rgba(66, 99, 235, 0.4)',
+                        background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                        border: '1px solid #3B82F6',
+                        boxShadow: '0 4px 14px rgba(37, 99, 235, 0.38)',
                       } : {
                         background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
                       }}
                     >
-                      {opt.label} {isSelected && '✓'}
+                      <span>{opt.label}</span>
+                      {isSelected && <span className="font-bold text-white ml-0.5">✓</span>}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* 5. Interests & Domains (Multi-Select) */}
-            <div className="space-y-2">
-              <label className="block text-2xs font-semibold tracking-wider uppercase" style={{ color: '#4263EB' }}>
+            {/* 5. Interests & Domains (Aligned Blue Buttons) */}
+            <div className="space-y-2.5">
+              <label className="block text-[11px] font-bold tracking-wider uppercase text-[#60A5FA]">
                 Interests & Domains
               </label>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {INTEREST_TAGS.map((tag) => {
                   const isSelected = selectedInterests.includes(tag);
                   return (
@@ -358,20 +412,22 @@ export default function OnboardingPage() {
                       type="button"
                       onClick={() => toggleItem(selectedInterests, tag, setSelectedInterests)}
                       className={cn(
-                        'text-xs px-3 py-1 rounded-xl font-medium transition-all duration-200',
+                        'h-8 px-3 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95',
                         isSelected
-                          ? 'text-white'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'text-white font-semibold'
+                          : 'text-[#94A3B8] hover:text-white'
                       )}
                       style={isSelected ? {
-                        background: 'rgba(139, 92, 246, 0.2)',
-                        border: '1px solid rgba(139, 92, 246, 0.4)',
+                        background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                        border: '1px solid #3B82F6',
+                        boxShadow: '0 4px 12px rgba(37, 99, 235, 0.32)',
                       } : {
                         background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
                       }}
                     >
-                      {tag} {isSelected && '✓'}
+                      <span>{tag}</span>
+                      {isSelected && <span className="font-bold text-white text-[11px]">✓</span>}
                     </button>
                   );
                 })}
@@ -379,37 +435,44 @@ export default function OnboardingPage() {
             </div>
 
             {/* 6. Short Bio (Optional) */}
-            <div className="space-y-1.5">
-              <label className="block text-2xs font-semibold tracking-wider uppercase" style={{ color: '#4263EB' }}>
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold tracking-wider uppercase text-[#60A5FA]">
                 Short Bio (Optional)
               </label>
               <textarea
-                rows={2}
+                rows={3}
                 placeholder="Tell others what you are building or interested in..."
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                className="w-full p-3 rounded-xl text-xs text-white placeholder:text-slate-600 resize-none focus:outline-none transition-all duration-200"
+                className="w-full p-3.5 rounded-xl text-xs text-white placeholder:text-[#475569] resize-none focus:outline-none transition-all duration-200"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: '#0D0E13',
+                  border: '1px solid rgba(255, 255, 255, 0.09)',
                 }}
-                onFocus={(e) => { e.target.style.borderColor = 'rgba(66, 99, 235, 0.4)'; e.target.style.boxShadow = '0 0 0 3px rgba(66, 99, 235, 0.08)'; }}
-                onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'; e.target.style.boxShadow = 'none'; }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3B82F6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.2)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.09)';
+                  e.target.style.boxShadow = 'none';
+                }}
               />
             </div>
 
-            {/* Action Button */}
+            {/* ── Primary Action Button (Aligned Blue Gradient) ────── */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-13 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all mt-4 disabled:opacity-60"
+              className="w-full h-13 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all mt-4 disabled:opacity-60 shadow-lg hover:brightness-110"
               style={{
-                background: 'linear-gradient(135deg, #4263EB 0%, #22D3EE 150%)',
-                boxShadow: '0 8px 30px rgba(66, 99, 235, 0.2)',
+                background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                boxShadow: '0 8px 32px rgba(37, 99, 235, 0.42)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
               }}
             >
               {isLoading ? (
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 text-white">
                   <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -418,16 +481,17 @@ export default function OnboardingPage() {
                 </span>
               ) : (
                 <>
-                  Save Profile & Go to Dashboard <ArrowRight className="h-4 w-4" />
+                  Save Profile & Go to Dashboard <ArrowRight className="h-4 w-4 text-white" />
                 </>
               )}
             </button>
           </form>
         </div>
 
-        <footer className="text-center text-2xs text-slate-500 flex items-center justify-center gap-1.5 pt-2">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-          Nexus &copy; 2025 • Verified LinkedIn Account Profile
+        {/* Footer */}
+        <footer className="text-center text-[11px] text-[#64748B] flex items-center justify-center gap-1.5 pt-2">
+          <ShieldCheck className="h-3.5 w-3.5 text-[#3B82F6]" />
+          Nexus &copy; 2025 • Official Verified LinkedIn Account Profile
         </footer>
       </div>
     </div>

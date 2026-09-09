@@ -1,8 +1,8 @@
 /**
- * Nexus Card Component
+ * Nexus Card Component — Cyber Aurora Edition
  *
  * Composable card with Header, Content, Footer sub-components.
- * Supports multiple visual variants: default, glass, bordered, elevated.
+ * Supports multiple visual variants: default, glass, cyber, elevated.
  */
 
 import * as React from 'react';
@@ -11,44 +11,51 @@ import { cn } from '@/lib/utils';
 
 // ─── Card Variants ────────────────────────────────────────────────────
 const cardVariants = cva(
-  'rounded-xl transition-all duration-300',
+  'rounded-2xl transition-all duration-300',
   {
     variants: {
       variant: {
-        // Clean card with subtle border
+        // Deep obsidian cyber card
         default: [
-          'bg-card text-card-foreground',
-          'border border-border',
-          'shadow-card hover:shadow-card-hover',
+          'bg-[#0A0F22]/85 text-card-foreground',
+          'border border-white/[0.08]',
+          'shadow-2xl hover:border-cyan-500/40 hover:shadow-glow-card',
         ],
         // Premium Glass morphism
         glass: [
-          'bg-white/[0.03] dark:bg-white/[0.03]',
-          'backdrop-blur-xl',
-          'border border-white/[0.06]',
-          'shadow-glass',
+          'bg-[#090D1E]/75',
+          'backdrop-blur-2xl',
+          'border border-white/[0.08]',
+          'shadow-2xl hover:border-violet-500/40 hover:shadow-glow-violet',
+        ],
+        // Cyber Aurora Highlight Card
+        cyber: [
+          'bg-gradient-to-br from-[#0D1430]/90 to-[#070B1A]/90',
+          'backdrop-blur-2xl',
+          'border border-cyan-500/30',
+          'shadow-glow-aurora',
         ],
         // Strong border — for interactive selection states
         bordered: [
-          'bg-card text-card-foreground',
-          'border-2 border-border',
-          'hover:border-accent/50',
+          'bg-[#0A0F22] text-card-foreground',
+          'border border-cyan-500/30',
+          'hover:border-cyan-400/60 hover:shadow-glow-cyan',
         ],
-        // Elevated — floating feel with hover lift
+        // Elevated — floating feel with smooth hover lift
         elevated: [
-          'bg-card text-card-foreground',
-          'border border-border',
-          'shadow-xl hover:shadow-2xl',
-          'hover:-translate-y-1 transition-transform duration-300',
+          'bg-[#0B1028] text-card-foreground',
+          'border border-white/[0.08]',
+          'shadow-2xl',
+          'hover:-translate-y-1.5 hover:border-cyan-500/40 hover:shadow-glow-aurora transition-all duration-300',
         ],
         // Ghost — invisible container with spacing
         ghost: 'bg-transparent',
         // Muted — subtle background, no border
-        muted: 'bg-muted text-muted-foreground',
-        // Accent — electric blue tinted highlight card
+        muted: 'bg-[#080D1D] text-muted-foreground',
+        // Accent — electric violet highlight card
         accent: [
-          'bg-accent/5 dark:bg-accent/10',
-          'border border-accent/20',
+          'bg-violet-950/20',
+          'border border-violet-500/30',
           'text-card-foreground',
         ],
       },
@@ -102,13 +109,13 @@ CardHeader.displayName = 'CardHeader';
 
 // ─── Card Title ───────────────────────────────────────────────────────
 const CardTitle = React.forwardRef<
-  HTMLParagraphElement,
+  HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
     className={cn(
-      'font-semibold text-lg leading-tight tracking-tight text-foreground',
+      'font-display font-bold text-lg leading-tight tracking-tight text-white',
       className
     )}
     {...props}
@@ -123,7 +130,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm text-muted-foreground leading-relaxed', className)}
+    className={cn('text-sm text-slate-400 leading-relaxed', className)}
     {...props}
   />
 ));
@@ -145,7 +152,7 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('flex items-center pt-4 border-t border-border mt-4', className)}
+    className={cn('flex items-center pt-4 border-t border-white/[0.06]', className)}
     {...props}
   />
 ));

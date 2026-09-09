@@ -2,7 +2,7 @@
 
 // ===================================================================
 // Nexus v3.0 — Opportunity Recap & Rating Page
-// Deep navy glassmorphism styling.
+// Warm Black + Soft White + Muted Sage design aesthetic.
 // Includes:
 //   - Event Rating Section (5 stars + feedback tags)
 //   - My LinkedIn Mentioned & Highlight Card for quick sharing
@@ -36,7 +36,7 @@ const EVENT_CONNECTIONS = [
 
 export default function RecapPage() {
   const params = useParams();
-  const eventId = (params?.id as string) || 'demo-1';
+  const eventId = (params?.id as string) || 'nexus1';
   const { user } = useAuthStore();
 
   // Rating state
@@ -83,7 +83,7 @@ export default function RecapPage() {
       localStorage.setItem(`nexus_event_rating_${eventId}`, JSON.stringify({ rating, comment, tags: feedbackTags }));
     } catch {}
 
-    toast.success('Thank you! 5-star rating & feedback saved permanently. 🎉');
+    toast.success('Thank you! Rating & feedback saved permanently. 🎉');
   };
 
   const handleExportCSV = () => {
@@ -104,33 +104,23 @@ export default function RecapPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto pb-20 md:pb-6" style={{ background: 'hsl(222, 47%, 5%)' }}>
-      <EventHeaderNav eventId={eventId} eventTitle="TechFest 2025" activeCount={39} />
+    <div className="flex-1 overflow-y-auto pb-24 md:pb-8 bg-[#030712] text-slate-100 selection:bg-cyan-500/30">
+      <EventHeaderNav eventId={eventId} eventTitle="TechFest 2025" activeCount={60} />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-8 animate-fade-in">
         {/* Banner */}
         <div
-          className="relative rounded-2xl overflow-hidden p-6 text-white"
-          style={{
-            background: 'linear-gradient(135deg, rgba(66, 99, 235, 0.12) 0%, rgba(139, 92, 246, 0.06) 50%, rgba(10, 15, 30, 0.9) 100%)',
-            border: '1px solid rgba(66, 99, 235, 0.15)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-          }}
+          className="relative rounded-3xl overflow-hidden p-6 sm:p-7 text-white bg-gradient-to-br from-violet-950/40 via-[#070B19]/90 to-[#030712]/95 border border-cyan-500/30 shadow-[0_16px_48px_rgba(0,0,0,0.6),0_0_24px_rgba(6,182,212,0.12)]"
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold mb-2"
-                style={{
-                  background: 'rgba(66, 99, 235, 0.08)',
-                  border: '1px solid rgba(66, 99, 235, 0.15)',
-                  color: '#7B93F5',
-                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold mb-2 bg-cyan-500/15 border border-cyan-400/35 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.15)]"
               >
-                <Award className="h-3.5 w-3.5" style={{ color: '#4263EB' }} />
+                <Award className="h-3.5 w-3.5 text-cyan-400" />
                 Event Opportunity Recap
               </div>
-              <h1 className="text-xl font-display font-bold text-white">Event Summary & Rating</h1>
+              <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white">Event Summary & Rating</h1>
               <p className="text-slate-400 text-xs mt-1">
                 Review your networking outcomes, share your profile, and rate your event experience.
               </p>
@@ -138,13 +128,9 @@ export default function RecapPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleExportCSV}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white text-xs font-semibold transition-all hover:bg-white/[0.06]"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold transition-all bg-white/[0.05] border border-white/[0.1] hover:bg-cyan-500/15 hover:border-cyan-400/40 active:scale-95 shadow-md"
               >
-                <Download className="h-3.5 w-3.5" style={{ color: '#4263EB' }} />
+                <Download className="h-3.5 w-3.5 text-cyan-400" />
                 Export CSV
               </button>
             </div>
@@ -153,18 +139,11 @@ export default function RecapPage() {
 
         {/* ── MY LINKEDIN MENTIONED & HIGHLIGHT CARD ───────────────── */}
         <div
-          className="rounded-2xl p-6 space-y-4"
-          style={{
-            background: 'rgba(66, 99, 235, 0.03)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(66, 99, 235, 0.2)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-          }}
+          className="rounded-3xl p-6 sm:p-7 space-y-4 bg-[#070B19]/80 border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl text-white" style={{ background: '#0A66C2' }}>
+              <div className="p-2.5 rounded-xl text-white bg-[#0A66C2] shadow-[0_4px_16px_rgba(10,102,194,0.35)]">
                 <Linkedin className="h-5 w-5" />
               </div>
               <div>
@@ -175,8 +154,7 @@ export default function RecapPage() {
               </div>
             </div>
             <span
-              className="text-[10px] px-2.5 py-1 rounded-full font-bold text-white uppercase"
-              style={{ background: '#0A66C2' }}
+              className="text-[10px] px-2.5 py-1 rounded-full font-bold text-white uppercase tracking-wider bg-[#0A66C2] shadow-sm"
             >
               Verified
             </span>
@@ -184,11 +162,7 @@ export default function RecapPage() {
 
           <div className="space-y-4 pt-2">
             <div
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl"
-              style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
-              }}
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#030712]/70 border border-white/[0.07]"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <Avatar src={user?.avatar_url} alt={user?.name || 'Anuj Vardham'} size="lg" />
@@ -196,11 +170,7 @@ export default function RecapPage() {
                   <div className="flex items-center gap-1.5">
                     <h3 className="font-bold text-sm text-white truncate">{user?.name || 'Anuj Vardham'}</h3>
                     <span
-                      className="text-[10px] px-2 py-0.5 rounded-md font-bold shrink-0"
-                      style={{
-                        background: 'rgba(66, 99, 235, 0.1)',
-                        color: '#7B93F5',
-                      }}
+                      className="text-[10px] px-2 py-0.5 rounded-md font-bold shrink-0 bg-violet-500/15 border border-violet-400/30 text-violet-300"
                     >
                       Founder
                     </span>
@@ -208,7 +178,7 @@ export default function RecapPage() {
                   <p className="text-xs text-slate-400 truncate">
                     {user?.company || 'Founder @ Nexus'}
                   </p>
-                  <p className="text-[11px] font-medium truncate mt-0.5" style={{ color: '#38bdf8' }}>
+                  <p className="text-[11px] font-medium truncate mt-0.5 text-cyan-300 font-mono">
                     {userLinkedinUrl}
                   </p>
                 </div>
@@ -218,18 +188,19 @@ export default function RecapPage() {
                 <button
                   onClick={handleCopyLinkedin}
                   className={cn(
-                    'flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all'
+                    'flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95'
                   )}
                   style={copied ? {
-                    background: '#10B981',
-                    color: '#ffffff',
+                    background: '#06B6D4',
+                    color: '#030712',
+                    boxShadow: '0 0 16px rgba(6, 182, 212, 0.4)',
                   } : {
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    color: '#e2e8f0',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#FFFFFF',
                   }}
                 >
-                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? <Check className="h-3.5 w-3.5 stroke-[2.5]" /> : <Copy className="h-3.5 w-3.5" />}
                   {copied ? 'Copied!' : 'Copy Link'}
                 </button>
 
@@ -237,8 +208,7 @@ export default function RecapPage() {
                   href={userLinkedinUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white shadow-md"
-                  style={{ background: '#0A66C2' }}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md active:scale-95 transition-transform bg-[#0A66C2] hover:brightness-110 shadow-[0_4px_16px_rgba(10,102,194,0.35)]"
                 >
                   <Linkedin className="h-3.5 w-3.5 fill-white" />
                   Open LinkedIn ↗
@@ -248,25 +218,21 @@ export default function RecapPage() {
 
             {/* Nexus Official LinkedIn Link */}
             <div
-              className="flex items-center justify-between p-3 rounded-xl"
-              style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.04)',
-              }}
+              className="flex items-center justify-between p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-400/25"
             >
               <div className="flex items-center gap-2">
                 <span
-                  className="font-bold text-[10px] px-2 py-0.5 rounded-md"
-                  style={{ background: 'rgba(66, 99, 235, 0.1)', color: '#7B93F5' }}
-                >NEXUS</span>
-                <span className="text-xs text-slate-400 font-medium">Official Nexus LinkedIn Page</span>
+                  className="font-bold text-[10px] px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-400/40"
+                >
+                  NEXUS
+                </span>
+                <span className="text-xs text-slate-300 font-medium">Official Nexus LinkedIn Network</span>
               </div>
               <a
                 href="https://www.linkedin.com/company/join-nexus1"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-semibold hover:underline flex items-center gap-1"
-                style={{ color: '#38bdf8' }}
+                className="text-xs font-bold hover:underline flex items-center gap-1 text-cyan-300"
               >
                 Follow Nexus <Share2 className="h-3 w-3" />
               </a>
@@ -276,14 +242,7 @@ export default function RecapPage() {
 
         {/* ── EVENT RATING SECTION ───────────────────────────────────── */}
         <div
-          className="rounded-2xl p-6 space-y-6"
-          style={{
-            background: 'rgba(255, 255, 255, 0.025)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-          }}
+          className="rounded-3xl p-6 sm:p-7 space-y-6 bg-[#070B19]/80 border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -297,14 +256,9 @@ export default function RecapPage() {
             </div>
             {isSubmitted && (
               <span
-                className="text-xs px-2.5 py-1 rounded-full font-semibold flex items-center gap-1"
-                style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid rgba(16, 185, 129, 0.2)',
-                  color: '#10B981',
-                }}
+                className="text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1 bg-cyan-500/15 border border-cyan-400/35 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
               >
-                <CheckCircle2 className="h-3 w-3" /> Rated
+                <CheckCircle2 className="h-3 w-3 text-cyan-400" /> Rated
               </span>
             )}
           </div>
@@ -312,11 +266,7 @@ export default function RecapPage() {
           <form onSubmit={handleSubmitRating} className="space-y-5">
             {/* Star Selector */}
             <div
-              className="flex flex-col items-center justify-center p-5 rounded-2xl text-center space-y-2"
-              style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.04)',
-              }}
+              className="flex flex-col items-center justify-center p-5 rounded-2xl text-center space-y-2 bg-[#030712]/70 border border-white/[0.06]"
             >
               <p className="text-xs font-medium text-slate-400">Overall Satisfaction</p>
               <div className="flex items-center gap-2">
@@ -335,7 +285,7 @@ export default function RecapPage() {
                         className={cn(
                           'h-8 w-8 transition-colors',
                           active
-                            ? 'text-amber-400 fill-amber-400'
+                            ? 'text-amber-400 fill-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.6)]'
                             : 'text-slate-700'
                         )}
                       />
@@ -369,16 +319,17 @@ export default function RecapPage() {
                       type="button"
                       onClick={() => toggleFeedbackTag(tag)}
                       className={cn(
-                        'text-xs px-3 py-1.5 rounded-xl font-medium transition-all'
+                        'text-xs px-3.5 py-1.5 rounded-xl font-bold transition-all active:scale-95'
                       )}
                       style={isSelected ? {
-                        background: 'linear-gradient(135deg, #4263EB, #3451D1)',
+                        background: 'linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%)',
                         color: '#ffffff',
-                        boxShadow: '0 4px 12px rgba(66, 99, 235, 0.25)',
+                        border: '1px solid rgba(6, 182, 212, 0.6)',
+                        boxShadow: '0 0 16px rgba(6, 182, 212, 0.3)',
                       } : {
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        color: '#94a3b8',
-                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        color: '#94A3B8',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
                       }}
                     >
                       {tag}
@@ -397,13 +348,7 @@ export default function RecapPage() {
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Mention key follow-ups or feedback for event organizers..."
-                className="w-full rounded-xl p-3 text-xs text-white placeholder:text-slate-600 focus:outline-none min-h-[80px] transition-all"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                }}
-                onFocus={(e) => { e.target.style.borderColor = 'rgba(66, 99, 235, 0.4)'; }}
-                onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'; }}
+                className="w-full rounded-xl p-3.5 text-xs text-white placeholder:text-slate-500 focus:outline-none min-h-[85px] transition-all bg-[#030712]/80 border border-white/[0.08] focus:border-cyan-400 focus:shadow-[0_0_15px_rgba(6,182,212,0.25)]"
               />
             </div>
 
@@ -412,25 +357,25 @@ export default function RecapPage() {
               type="submit"
               disabled={isSubmitted}
               className={cn(
-                'w-full h-13 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95'
+                'w-full h-12 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg'
               )}
               style={isSubmitted ? {
-                background: 'rgba(16, 185, 129, 0.1)',
-                border: '1px solid rgba(16, 185, 129, 0.2)',
-                color: '#10B981',
+                background: 'rgba(6, 182, 212, 0.15)',
+                border: '1px solid rgba(6, 182, 212, 0.35)',
+                color: '#67E8F9',
               } : {
-                background: 'linear-gradient(135deg, #4263EB 0%, #3451D1 100%)',
+                background: 'linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%)',
                 color: '#ffffff',
-                boxShadow: '0 8px 24px rgba(66, 99, 235, 0.25)',
+                boxShadow: '0 0 20px rgba(6, 182, 212, 0.35)',
               }}
             >
               {isSubmitted ? (
                 <>
-                  <CheckCircle2 className="h-4 w-4" /> Rating Saved
+                  <CheckCircle2 className="h-4 w-4 text-cyan-400" /> Rating Saved
                 </>
               ) : (
                 <>
-                  <Star className="h-4 w-4" /> Submit Event Rating
+                  <Star className="h-4 w-4 fill-current" /> Submit Event Rating
                 </>
               )}
             </button>
@@ -442,15 +387,14 @@ export default function RecapPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Users className="h-4 w-4" style={{ color: '#4263EB' }} />
+                <Users className="h-4 w-4 text-cyan-400" />
                 Event Connections ({EVENT_CONNECTIONS.length})
               </h2>
               <p className="text-xs text-slate-400">People you interacted with at TechFest 2025</p>
             </div>
             <button
               onClick={handleExportCSV}
-              className="text-xs font-semibold flex items-center gap-1 hover:underline"
-              style={{ color: '#4263EB' }}
+              className="text-xs font-bold flex items-center gap-1 hover:underline text-cyan-400"
             >
               Export List <ArrowUpRight className="h-3 w-3" />
             </button>
@@ -460,11 +404,7 @@ export default function RecapPage() {
             {EVENT_CONNECTIONS.map((conn) => (
               <div
                 key={conn.id}
-                className="rounded-2xl p-4 transition-all duration-200"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.025)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                }}
+                className="rounded-2xl p-4 transition-all duration-200 bg-[#070B19]/80 border border-white/[0.08]"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
@@ -476,11 +416,7 @@ export default function RecapPage() {
                         {conn.tags.map((t) => (
                           <span
                             key={t}
-                            className="text-[10px] px-2 py-0.5 rounded-md font-medium text-slate-300"
-                            style={{
-                              background: 'rgba(255, 255, 255, 0.04)',
-                              border: '1px solid rgba(255, 255, 255, 0.06)',
-                            }}
+                            className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-cyan-500/10 border border-cyan-400/20 text-cyan-200"
                           >
                             {t}
                           </span>
@@ -498,8 +434,7 @@ export default function RecapPage() {
                     })()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white text-xs font-semibold transition-all shrink-0 shadow-md"
-                    style={{ background: '#0A66C2' }}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white text-xs font-bold transition-all shrink-0 shadow-md active:scale-95 bg-[#0A66C2] hover:brightness-110 shadow-[0_4px_16px_rgba(10,102,194,0.3)]"
                   >
                     <Linkedin className="h-3.5 w-3.5" />
                     View LinkedIn

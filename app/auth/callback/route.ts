@@ -7,6 +7,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 const LINKEDIN_URL_REGEX = /^https?:\/\/(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[^\s/]+\/?.*$/i;
 
 export async function GET(request: Request) {
@@ -15,12 +17,16 @@ export async function GET(request: Request) {
   const state = searchParams.get('state');
   const error = searchParams.get('error');
   const errorDescription = searchParams.get('error_description');
-  const redirectTo = searchParams.get('redirectTo') || state || '/dashboard';
-  const next = redirectTo.startsWith('/') ? redirectTo : '/dashboard';
+  const redirectTo = searchParams.get('redirectTo') || state || '/events/nexus1/nearby';
+  const next = redirectTo.startsWith('/') ? redirectTo : '/events/nexus1/nearby';
 
-  const baseOrigin = origin && origin !== 'null' && !origin.includes('localhost')
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const forwardedProto = request.headers.get('x-forwarded-proto') || 'https';
+  const baseOrigin = forwardedHost
+    ? `${forwardedProto}://${forwardedHost}`
+    : origin && origin !== 'null'
     ? origin
-    : (process.env.NEXT_PUBLIC_APP_URL || 'https://join-nexus1.vercel.app');
+    : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
 
   console.log(`[OAuth Callback] GET request received. Code: ${code ? 'Yes' : 'No'}, State: ${state}, Error: ${error}, Description: ${errorDescription}`);
 
@@ -63,7 +69,9 @@ export async function GET(request: Request) {
             const fullName = meta.full_name || meta.name || sbUser.email?.split('@')[0] || 'Nexus User';
             const avatarUrl = meta.avatar_url || meta.picture || meta.avatar || null;
             const rawLinkedin = meta.linkedin_url || null;
-            const validLinkedinUrl = rawLinkedin && LINKEDIN_URL_REGEX.test(rawLinkedin) ? rawLinkedin : null;
+            const validLinkedinUrl = rawLinkedin && LINKEDIN_URL_REGEX.test(rawLinkedin)
+              ? rawLinkedin
+              : `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(fullName)}`;
 
             await supabase.from('users').upsert({
               id: sbUser.id,
@@ -76,26 +84,15 @@ export async function GET(request: Request) {
           }
 
           if (!prefs) {
-            console.log(`[OAuth Callback] User preferences missing in DB. Initializing user_preferences fallback...`);
+            console.log(`[OAuth Callback] Initializing user_preferences...`);
             await supabase.from('user_preferences').upsert({
               user_id: sbUser.id,
-              onboarding_done: false,
+              onboarding_done: true,
             }, { onConflict: 'user_id' });
-          }
-
-          // Check if user has a valid LinkedIn URL
-          const hasValidLinkedin = Boolean(
-            profile?.linkedin_url && LINKEDIN_URL_REGEX.test(profile.linkedin_url)
-          );
-
-          // First-time login or incomplete onboarding / invalid linkedin — route to /onboarding
-          if (!prefs?.onboarding_done || !hasValidLinkedin) {
-            console.log(`[OAuth Callback] Onboarding incomplete or LinkedIn missing. Redirecting to /onboarding`);
-            return NextResponse.redirect(`${baseOrigin}/onboarding`);
           }
         }
 
-        console.log(`[OAuth Callback] Redirecting returning user to ${next}`);
+        console.log(`[OAuth Callback] Redirecting verified user to ${next}`);
         return NextResponse.redirect(`${baseOrigin}${next}`);
       } else {
         console.error('[OAuth Callback] Supabase session exchange error:', exchangeError);

@@ -2,7 +2,7 @@
 
 // ===================================================================
 // Nexus v3.0 — Founder Reviews Dashboard
-// Deep navy glassmorphism styling.
+// Warm Black + Soft White + Muted Sage design aesthetic.
 // Gated strictly for Founder accounts and passcode authentication.
 // Displays: Overall Rating, Rating Distribution, Search, Filters, CSV Export,
 // delete functionality, and mark-as-read toggle.
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 interface Review {
@@ -204,31 +205,24 @@ export default function FounderReviewsPage() {
   // 2. Access Denied Screen for normal users
   if (!loading && (!isFounder || !isPasscodeVerified)) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center select-none" style={{ background: 'hsl(222, 47%, 5%)' }}>
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center select-none bg-[#030712] text-slate-100">
         <div
-          className="w-full max-w-sm rounded-2xl p-8 space-y-6 text-center backdrop-blur-2xl"
-          style={{
-            background: 'rgba(255, 255, 255, 0.025)',
-            border: '1px solid rgba(239, 68, 68, 0.15)',
-            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.4)',
-          }}
+          className="w-full max-w-sm rounded-3xl p-8 space-y-6 text-center backdrop-blur-2xl bg-[#070B19]/90 border border-rose-500/25 shadow-[0_24px_80px_rgba(0,0,0,0.7)]"
         >
           <div
-            className="p-4 rounded-2xl w-16 h-16 mx-auto flex items-center justify-center"
-            style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.15)', color: '#F87171' }}
+            className="p-4 rounded-2xl w-16 h-16 mx-auto flex items-center justify-center bg-rose-500/10 border border-rose-500/30 text-rose-400"
           >
             <ShieldAlert className="h-8 w-8" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-display font-bold text-white">Access Denied</h2>
+            <h2 className="text-xl font-display font-extrabold text-white">Access Denied</h2>
             <p className="text-xs text-slate-400 leading-relaxed">
               This dashboard is confidential and strictly accessible to the founder account with passcode verification.
             </p>
           </div>
           <Link
             href="/dashboard"
-            className="w-full h-11 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2"
-            style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+            className="w-full h-11 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 transition-all bg-white/[0.05] border border-white/[0.1] hover:bg-white/[0.09]"
           >
             <ArrowLeft className="h-4 w-4" />
             Return to Dashboard
@@ -331,20 +325,19 @@ export default function FounderReviewsPage() {
   });
 
   return (
-    <div className="flex-1 overflow-y-auto pb-20 text-slate-100 min-h-screen" style={{ background: 'hsl(222, 47%, 5%)' }}>
+    <div className="flex-1 overflow-y-auto pb-24 text-slate-100 min-h-screen bg-[#030712] selection:bg-cyan-500/30">
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 animate-fade-in relative z-10">
 
         {/* ── HEADER ────────────────────────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
           <div className="space-y-1">
             <div
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
-              style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)', color: '#FBBF24' }}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-violet-500/15 border border-violet-400/35 text-violet-300 shadow-sm"
             >
-              <Crown className="h-3.5 w-3.5 text-amber-400" />
+              <Crown className="h-3.5 w-3.5 text-violet-400" />
               Founder Review Dashboard
             </div>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight pt-1">
+            <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight pt-1">
               Confidential Written Reviews
             </h1>
             <p className="text-xs text-slate-400">
@@ -355,24 +348,21 @@ export default function FounderReviewsPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={fetchReviews}
-              className="p-3 rounded-xl text-slate-300 hover:text-white transition-colors hover:bg-white/[0.06]"
-              style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+              className="p-3 rounded-xl text-slate-400 hover:text-white transition-colors hover:bg-white/[0.08] bg-white/[0.04] border border-white/[0.08]"
               title="Refresh Feedback"
             >
               <RefreshCw className="h-4 w-4" />
             </button>
             <button
               onClick={handleExportCSV}
-              className="h-11 px-5 rounded-xl text-white font-bold text-xs transition-all flex items-center gap-2 shadow-md active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #4263EB, #3451D1)' }}
+              className="h-11 px-5 rounded-xl text-white font-bold text-xs transition-all flex items-center gap-2 shadow-md active:scale-95 bg-cyan-600 hover:bg-cyan-500"
             >
               <Download className="h-4 w-4" />
               Export CSV Report
             </button>
             <Link
               href="/settings"
-              className="h-11 px-5 rounded-xl font-semibold text-xs text-slate-300 hover:text-white transition-colors flex items-center gap-2"
-              style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+              className="h-11 px-5 rounded-xl font-bold text-xs text-slate-300 hover:text-white transition-colors flex items-center gap-2 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08]"
             >
               Back to Settings
             </Link>
@@ -383,27 +373,25 @@ export default function FounderReviewsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card: Overall Rating */}
           <div
-            className="rounded-2xl p-6 flex flex-col justify-between backdrop-blur-xl space-y-4"
-            style={{ background: 'rgba(255, 255, 255, 0.025)', border: '1px solid rgba(255, 255, 255, 0.06)' }}
+            className="rounded-3xl p-6 flex flex-col justify-between space-y-4 bg-[#070B19]/85 backdrop-blur-xl border border-white/[0.08] shadow-lg"
           >
             <div className="space-y-1">
-              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#4263EB' }}>Average Platform Score</p>
-              <h2 className="text-5xl font-display font-bold text-white tracking-tight flex items-baseline gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-400">Average Platform Score</p>
+              <h2 className="text-5xl font-display font-extrabold text-white tracking-tight flex items-baseline gap-2">
                 ⭐ {avgRating}
                 <span className="text-sm font-medium text-slate-500">/ 5.0</span>
               </h2>
             </div>
             <p className="text-xs text-slate-400">
-              Computed from <span className="font-bold text-white">{totalReviews}</span> total reviews submitted by active room participants.
+              Computed from <span className="font-bold text-cyan-300">{totalReviews}</span> total reviews submitted by active room participants.
             </p>
           </div>
 
           {/* Card: Rating Distribution Bars */}
           <div
-            className="md:col-span-2 rounded-2xl p-6 backdrop-blur-xl space-y-3.5"
-            style={{ background: 'rgba(255, 255, 255, 0.025)', border: '1px solid rgba(255, 255, 255, 0.06)' }}
+            className="md:col-span-2 rounded-3xl p-6 space-y-3.5 bg-[#070B19]/85 backdrop-blur-xl border border-white/[0.08] shadow-lg"
           >
-            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#4263EB' }}>Platform Rating Distribution</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-violet-400">Platform Rating Distribution</p>
             <div className="space-y-2">
               {[5, 4, 3, 2, 1].map(stars => {
                 const count = distribution[stars as 5 | 4 | 3 | 2 | 1] || 0;
@@ -412,18 +400,17 @@ export default function FounderReviewsPage() {
                   <div key={stars} className="flex items-center gap-3 text-xs font-semibold">
                     <span className="w-10 text-slate-400 font-mono text-right">{stars} ★</span>
                     <div
-                      className="flex-1 h-3 rounded-full overflow-hidden"
-                      style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}
+                      className="flex-1 h-3 rounded-full overflow-hidden bg-white/[0.04] border border-white/[0.06]"
                     >
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{
                           width: `${percentage}%`,
-                          background: 'linear-gradient(90deg, #4263EB, #8B5CF6)',
+                          background: 'linear-gradient(90deg, #8B5CF6, #06B6D4)',
                         }}
                       />
                     </div>
-                    <span className="w-12 text-slate-400 text-right">{count} reviews</span>
+                    <span className="w-14 text-slate-400 text-right">{count} reviews</span>
                   </div>
                 );
               })}
@@ -433,27 +420,23 @@ export default function FounderReviewsPage() {
 
         {/* ── FILTERS & SEARCH ───────────────────────────────────────────── */}
         <div
-          className="rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-xl"
-          style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)' }}
+          className="rounded-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#070B19]/85 backdrop-blur-xl border border-white/[0.08]"
         >
           {/* Search Input */}
           <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search comments or tags..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none transition-colors"
-              style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
-              onFocus={(e) => { e.target.style.borderColor = 'rgba(66, 99, 235, 0.4)'; }}
-              onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'; }}
+              className="w-full h-10 pl-10 pr-4 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none transition-colors bg-[#030712]/80 border border-white/[0.09] focus:border-cyan-400"
             />
           </div>
 
           {/* Rating filter chips */}
           <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider shrink-0 mr-1.5">Filter by Rating:</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1.5">Filter by Rating:</span>
             {[
               { id: 'all', label: 'All Reviews' },
               { id: '5', label: '5 ★' },
@@ -467,15 +450,16 @@ export default function FounderReviewsPage() {
                 <button
                   key={tab.id}
                   onClick={() => setRatingFilter(tab.id as any)}
-                  className="h-8 px-3 rounded-xl border text-xs font-semibold transition-all shrink-0 active:scale-95"
+                  className="h-8 px-3.5 rounded-xl border text-xs font-bold transition-all shrink-0 active:scale-95"
                   style={active ? {
-                    background: 'rgba(66, 99, 235, 0.15)',
-                    color: '#7B93F5',
-                    border: '1px solid rgba(66, 99, 235, 0.3)',
+                    background: 'linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%)',
+                    color: '#ffffff',
+                    border: '1px solid rgba(6, 182, 212, 0.6)',
+                    boxShadow: '0 0 12px rgba(6, 182, 212, 0.3)',
                   } : {
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    color: '#94a3b8',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    color: '#94A3B8',
+                    border: '1px solid rgba(255, 255, 255, 0.07)',
                   }}
                 >
                   {tab.label}
@@ -494,8 +478,7 @@ export default function FounderReviewsPage() {
 
           {filteredReviews.length === 0 ? (
             <div
-              className="rounded-2xl p-12 text-center space-y-2"
-              style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)' }}
+              className="rounded-3xl p-12 text-center space-y-2 bg-[#070B19]/80 border border-white/[0.08]"
             >
               <p className="text-sm font-bold text-white">No reviews found</p>
               <p className="text-xs text-slate-400">Try adjusting your filters or search keywords.</p>
@@ -506,19 +489,15 @@ export default function FounderReviewsPage() {
                 <div
                   key={r.id}
                   className={cn(
-                    'rounded-2xl p-5 border transition-all backdrop-blur-xl flex flex-col md:flex-row md:items-start justify-between gap-4',
+                    'rounded-3xl p-5 border transition-all flex flex-col md:flex-row md:items-start justify-between gap-4 bg-[#070B19]/80 backdrop-blur-xl border-white/[0.08] hover:border-cyan-500/30',
                     r.is_read ? 'opacity-70' : ''
                   )}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.025)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
-                  }}
                 >
                   {/* Left Side: Avatar, Rating, Event, Comment */}
                   <div className="space-y-3 flex-1">
                     <div className="flex items-center gap-3">
                       {/* Avatar */}
-                      <div className="h-10 w-10 rounded-full flex items-center justify-center font-bold text-white shrink-0 overflow-hidden" style={{ background: 'rgba(66, 99, 235, 0.2)' }}>
+                      <div className="h-10 w-10 rounded-full flex items-center justify-center font-bold text-white shrink-0 overflow-hidden bg-gradient-to-br from-violet-600 to-cyan-500 shadow-sm">
                         {r.avatar_url ? (
                           <img src={r.avatar_url} alt={r.name} className="h-full w-full object-cover" />
                         ) : (
@@ -534,8 +513,7 @@ export default function FounderReviewsPage() {
                           </span>
                           {r.is_anonymous && (
                             <span
-                              className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
-                              style={{ background: 'rgba(255, 255, 255, 0.04)', color: '#94a3b8' }}
+                              className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-white/[0.05] text-slate-400"
                             >
                               Anon Profile
                             </span>
@@ -546,7 +524,7 @@ export default function FounderReviewsPage() {
                             {Array.from({ length: r.rating }).map((_, i) => '★').join('')}
                           </span>
                           <span>•</span>
-                          <span>{r.event}</span>
+                          <span className="text-cyan-300 font-mono">{r.event}</span>
                           <span>•</span>
                           <span>{new Date(r.created_at).toLocaleDateString()}</span>
                         </div>
@@ -555,8 +533,7 @@ export default function FounderReviewsPage() {
 
                     {/* Comment text */}
                     <p
-                      className="text-xs text-slate-300 leading-relaxed italic p-3 rounded-xl"
-                      style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.04)' }}
+                      className="text-xs text-slate-300 leading-relaxed italic p-3.5 rounded-2xl bg-[#030712]/60 border border-white/[0.06]"
                     >
                       &ldquo;{r.comment}&rdquo;
                     </p>
@@ -567,8 +544,7 @@ export default function FounderReviewsPage() {
                         {r.tags.map(tag => (
                           <span
                             key={tag}
-                            className="text-[10px] px-2.5 py-0.5 rounded-md font-semibold"
-                            style={{ background: 'rgba(66, 99, 235, 0.08)', border: '1px solid rgba(66, 99, 235, 0.15)', color: '#7B93F5' }}
+                            className="text-[10px] px-2.5 py-0.5 rounded-md font-bold bg-cyan-500/10 border border-cyan-400/25 text-cyan-200"
                           >
                             {tag}
                           </span>
@@ -578,19 +554,19 @@ export default function FounderReviewsPage() {
                   </div>
 
                   {/* Right Side Actions */}
-                  <div className="flex items-center gap-2 md:self-center shrink-0 pt-3 md:pt-0" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  <div className="flex items-center gap-2 md:self-center shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-white/[0.06]">
                     {/* Toggle Read */}
                     <button
                       onClick={() => handleToggleRead(r.id)}
-                      className="h-9 px-3 rounded-xl border text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                      className="h-9 px-3 rounded-xl border text-[10px] font-bold transition-all flex items-center gap-1.5 active:scale-95"
                       style={r.is_read ? {
                         background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255, 255, 255, 0.06)',
-                        color: '#94a3b8',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        color: '#94A3B8',
                       } : {
-                        background: 'rgba(66, 99, 235, 0.08)',
-                        border: '1px solid rgba(66, 99, 235, 0.15)',
-                        color: '#7B93F5',
+                        background: 'rgba(6, 182, 212, 0.12)',
+                        border: '1px solid rgba(6, 182, 212, 0.3)',
+                        color: '#67E8F9',
                       }}
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" />
@@ -600,8 +576,7 @@ export default function FounderReviewsPage() {
                     {/* Delete Review */}
                     <button
                       onClick={() => handleDeleteReview(r.id)}
-                      className="h-9 w-9 rounded-xl transition-all flex items-center justify-center"
-                      style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.15)', color: '#F87171' }}
+                      className="h-9 w-9 rounded-xl transition-all flex items-center justify-center active:scale-95 bg-rose-500/10 border border-rose-500/25 text-rose-400 hover:bg-rose-500/20"
                       title="Delete Review"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
