@@ -5,16 +5,19 @@
 // Electric Violet + Neon Cyan + Cosmic Obsidian.
 // Fast, responsive, and lag-free.
 // ===================================================================
+import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { Avatar } from '@/components/ui/Avatar';
 import {
   Mail, Edit3, Building2, ShieldCheck,
-  Calendar, Users, Eye, Zap, Crown, ExternalLink
+  Calendar, Users, Eye, Zap, Crown, ExternalLink, QrCode, Sparkles
 } from 'lucide-react';
+import { UserPassModal } from '@/components/profile/UserPassModal';
 import Link from 'next/link';
 
 export default function ProfilePageV2() {
   const { user: storeUser } = useAuthStore();
+  const [isPassModalOpen, setIsPassModalOpen] = useState(false);
 
   const user = storeUser || {
     id: 'user-founder-anuj',
@@ -60,12 +63,21 @@ export default function ProfilePageV2() {
             <p className="text-xs text-slate-400">Manage your event networking identity</p>
           </div>
 
-          <Link
-            href="/onboarding"
-            className="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all text-white bg-white/[0.04] border border-white/[0.08] hover:border-cyan-400/40 hover:bg-cyan-500/15 shadow-sm"
-          >
-            <Edit3 className="h-3.5 w-3.5 text-cyan-400" /> Edit Profile
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsPassModalOpen(true)}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all text-cyan-300 bg-cyan-500/15 border border-cyan-400/35 hover:bg-cyan-500/25 shadow-[0_0_12px_rgba(6,182,212,0.2)]"
+            >
+              <QrCode className="h-3.5 w-3.5 text-cyan-400" /> My Pass QR
+            </button>
+
+            <Link
+              href="/onboarding"
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 active:scale-95 transition-all text-slate-200 bg-white/[0.04] border border-white/[0.08] hover:border-cyan-400/40 hover:bg-cyan-500/15"
+            >
+              <Edit3 className="h-3.5 w-3.5 text-cyan-400" /> Edit
+            </Link>
+          </div>
         </div>
 
         {/* ── Main Profile Card Container ───────────────────────────── */}
@@ -207,6 +219,12 @@ export default function ProfilePageV2() {
           <Edit3 className="h-4 w-4" />
           Update Profile & Intent Preferences
         </Link>
+
+        {/* Personal Pass Modal */}
+        <UserPassModal
+          isOpen={isPassModalOpen}
+          onClose={() => setIsPassModalOpen(false)}
+        />
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { CalendarPlus, X, RefreshCw, Copy, Check, Sparkles } from 'lucide-react';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
+import { QrCodeDisplay } from '@/components/ui/QrCodeDisplay';
 import toast from 'react-hot-toast';
 
 interface CreateEventModalProps {
@@ -69,6 +70,27 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
 
     setIsSubmitting(true);
 
+    // 1. Cross-device API registration (available to both mobile and laptop)
+    try {
+      await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: formattedCode,
+          title: eventTitle,
+          category,
+          venueName,
+          venueAddress,
+          organizerId: user?.id || 'user-founder-anuj',
+          organizerName: user?.name || 'Organizer',
+          type: 'event',
+        }),
+      });
+    } catch (apiErr) {
+      console.warn('API event registration fallback:', apiErr);
+    }
+
+    // 2. Supabase DB persistence if configured
     if (isSupabaseConfigured) {
       try {
         const supabase = createClient();
@@ -96,11 +118,15 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
     } catch {}
 
     setCreatedEventCode(formattedCode);
-    toast.success(`🎉 Event "${eventTitle}" created! Code: ${formattedCode} (Valid for 4 hours)`);
+    toast.success(`🎉 Event "${eventTitle}" created! Code: ${formattedCode}`);
     setIsSubmitting(false);
   };
 
   if (!isOpen) return null;
+
+  const shareJoinLink = typeof window !== 'undefined'
+    ? `${window.location.origin}/events/join?code=${encodeURIComponent(createdEventCode || '')}`
+    : `https://nexus.app/events/join?code=${createdEventCode || ''}`;
 
   return (
     <div
@@ -142,48 +168,34 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
         {/* Content Body */}
         <div className="p-6 overflow-y-auto space-y-5">
           {createdEventCode ? (
-            /* Success View */
-            <div className="text-center py-6 space-y-4">
+            /* Success View with Interactive QR Display */
+            <div className="text-center py-2 space-y-4 flex flex-col items-center">
               <div
-                className="p-3 rounded-full w-16 h-16 mx-auto flex items-center justify-center"
+                className="p-2.5 rounded-full w-12 h-12 flex items-center justify-center"
                 style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10B981' }}
               >
-                <Check className="h-8 w-8" />
+                <Check className="h-6 w-6" />
               </div>
-              <h2 className="text-xl font-display font-bold text-white">Event Code Created!</h2>
-              <p className="text-xs text-slate-400">
-                Give this 6-character code to attendees at the venue entrance:
-              </p>
-
-              {/* Code Highlight Box */}
-              <div
-                className="p-6 rounded-2xl space-y-2"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid rgba(66, 99, 235, 0.3)',
-                }}
-              >
-                <span className="text-[10px] uppercase tracking-widest font-bold" style={{ color: '#4263EB' }}>
-                  OFFICIAL EVENT JOIN CODE
-                </span>
-                <div className="text-4xl font-mono font-bold tracking-[0.3em] text-white">
-                  {createdEventCode}
-                </div>
-                <button
-                  onClick={handleCopyCode}
-                  className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all hover:bg-white/[0.06]"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                  }}
-                >
-                  {copiedCode ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                  {copiedCode ? 'Copied to Clipboard!' : 'Copy Code'}
-                </button>
+              <div>
+                <h2 className="text-xl font-display font-bold text-white">Event Code & QR Generated!</h2>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto pt-1">
+                  Project on your laptop screen or venue monitors so mobile attendees can scan or enter this code.
+                </p>
               </div>
 
-              <div className="flex gap-2 pt-2">
+              {/* Scannable High-Res QR Code */}
+              <QrCodeDisplay
+                value={shareJoinLink}
+                codeText={createdEventCode}
+                size={200}
+                title={title}
+                subtitle="Attendees scan with phone camera or type into Join Screen"
+                shareUrl={shareJoinLink}
+              />
+
+              <div className="flex gap-2 pt-2 w-full max-w-sm">
                 <button
+                  type="button"
                   onClick={() => {
                     const roomCode = createdEventCode;
                     setCreatedEventCode(null);

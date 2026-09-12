@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Global room store across warm serverless instances
-const globalRoomStore: Record<string, Map<string, any>> = {};
+declare global {
+  // eslint-disable-next-line no-var
+  var __nexusRoomStore: Record<string, Map<string, any>> | undefined;
+}
+
+// Global room store across warm serverless instances and hot reloads
+if (!globalThis.__nexusRoomStore) {
+  globalThis.__nexusRoomStore = {};
+}
+const globalRoomStore = globalThis.__nexusRoomStore;
 
 // Inactivity threshold: 25 seconds without a heartbeat = user left room
 const PRESENCE_TIMEOUT_MS = 25_000;
