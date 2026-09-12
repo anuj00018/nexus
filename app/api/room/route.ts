@@ -130,26 +130,30 @@ export async function GET(request: Request) {
     }
   }
 
-  // Cross-Instance Vercel Sync: Load real attendees who joined this event from Supabase DB
+  // Cross-Instance Vercel Sync: Load real attendees who joined this event from Supabase DB (capped at 600ms timeout)
   const supabase = getSupabaseClient();
   if (supabase) {
     try {
-      const { data: dbParticipants } = await supabase
-        .from('event_participants')
-        .select(`
-          user_id,
-          users:user_id (
-            id,
-            name,
-            company,
-            avatar_url,
-            linkedin_url,
-            role,
-            headline,
-            is_verified
-          )
-        `)
-        .eq('event_id', eventId);
+      const res: any = await Promise.race([
+        supabase
+          .from('event_participants')
+          .select(`
+            user_id,
+            users:user_id (
+              id,
+              name,
+              company,
+              avatar_url,
+              linkedin_url,
+              role,
+              headline,
+              is_verified
+            )
+          `)
+          .eq('event_id', eventId),
+        new Promise((resolve) => setTimeout(() => resolve({ data: null }), 600)),
+      ]);
+      const dbParticipants = res?.data;
 
       if (dbParticipants && Array.isArray(dbParticipants)) {
         for (const row of dbParticipants) {
@@ -222,30 +226,30 @@ export async function POST(request: Request) {
       lastActiveAt: Date.now(),
     };
 
-    // Upsert real user into active room map
+    // Upsert real user into active room map immediately
     globalRoomStore[eventId].set(userId, participant);
 
-    // Save to Supabase DB if available
+    // Optional background non-blocking sync to Supabase DB (NEVER blocks API response)
     const supabase = getSupabaseClient();
     if (supabase) {
-      try {
-        await supabase.from('users').upsert({
-          id: userId,
-          name: participant.name,
-          company: participant.company,
-          avatar_url: participant.avatar_url,
-          linkedin_url: participant.linkedin_url,
-          role: participant.role,
-          is_verified: true,
-        }, { onConflict: 'id' });
-
-        await supabase.from('event_participants').upsert({
-          event_id: eventId,
-          user_id: userId,
-        }, { onConflict: 'event_id,user_id' });
-      } catch (dbErr) {
-        console.warn('DB upsert warning:', dbErr);
-      }
+      Promise.race([
+        Promise.all([
+          supabase.from('users').upsert({
+            id: userId,
+            name: participant.name,
+            company: participant.company,
+            avatar_url: participant.avatar_url,
+            linkedin_url: participant.linkedin_url,
+            role: participant.role,
+            is_verified: true,
+          }, { onConflict: 'id' }),
+          supabase.from('event_participants').upsert({
+            event_id: eventId,
+            user_id: userId,
+          }, { onConflict: 'event_id,user_id' }),
+        ]),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 800)),
+      ]).catch(() => {});
     }
 
     return NextResponse.json({

@@ -89,16 +89,16 @@ export async function GET(request: Request) {
     const cleanCode = rawCode.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 12);
     let event = eventsStore[cleanCode];
 
-    // Check Supabase if not in memory
+    // Check Supabase if not in memory (with 600ms hard timeout so it never hangs)
     if (!event) {
       const supabase = getSupabaseAdmin();
       if (supabase) {
         try {
-          const { data } = await supabase
-            .from('events')
-            .select('*')
-            .eq('join_code', cleanCode)
-            .maybeSingle();
+          const res: any = await Promise.race([
+            supabase.from('events').select('*').eq('join_code', cleanCode).maybeSingle(),
+            new Promise((resolve) => setTimeout(() => resolve({ data: null }), 600)),
+          ]);
+          const data = res?.data;
 
           if (data) {
             event = {
@@ -115,7 +115,7 @@ export async function GET(request: Request) {
             eventsStore[cleanCode] = event;
           }
         } catch (dbErr) {
-          console.warn('[API Events] Supabase lookup warning:', dbErr);
+          console.warn('[API Events] Supabase lookup notice:', dbErr);
         }
       }
     }
@@ -172,14 +172,14 @@ export async function POST(request: Request) {
       expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24-hour active room window
     };
 
-    // Store in persistent in-memory global registry
+    // Store immediately in persistent global registry (0ms latency across all devices)
     eventsStore[cleanCode] = eventRecord;
 
-    // Persist to Supabase if available
+    // Optional background non-blocking sync to Supabase (NEVER awaited or blocking)
     const supabase = getSupabaseAdmin();
     if (supabase && type === 'event') {
-      try {
-        await supabase.from('events').upsert({
+      Promise.race([
+        supabase.from('events').upsert({
           title: eventRecord.title,
           join_code: cleanCode,
           category: eventRecord.category,
@@ -187,10 +187,9 @@ export async function POST(request: Request) {
           venue_address: eventRecord.venueAddress,
           organizer_id: organizerId || 'user-founder-anuj',
           status: 'active',
-        }, { onConflict: 'join_code' });
-      } catch (err) {
-        console.warn('[API Events] Supabase upsert non-blocking warning:', err);
-      }
+        }, { onConflict: 'join_code' }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 800)),
+      ]).catch(() => {});
     }
 
     return NextResponse.json({

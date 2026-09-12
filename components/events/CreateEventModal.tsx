@@ -32,11 +32,11 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
   const router = useRouter();
   const { user } = useAuthStore();
 
-  const [title, setTitle] = useState('Nexus Event 2025');
-  const [joinCode, setJoinCode] = useState('HYD2025');
-  const [category, setCategory] = useState('tech_fest');
-  const [venueName, setVenueName] = useState('Hyderabad Tech Hub');
-  const [venueAddress, setVenueAddress] = useState('HITEC City, Hyderabad');
+  const [title, setTitle] = useState('Nexus Event 2026');
+  const [joinCode, setJoinCode] = useState('MGIT11');
+  const [category, setCategory] = useState('meetup');
+  const [venueName, setVenueName] = useState('Tech Hub');
+  const [venueAddress, setVenueAddress] = useState('Innovation Center');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [createdEventCode, setCreatedEventCode] = useState<string | null>(null);
@@ -58,45 +58,53 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const handleCreateEvent = async (e: React.FormEvent) => {
+  const handleCreateEvent = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formattedCode = joinCode.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-    if (formattedCode.length !== 6) {
-      toast.error('Event code must be exactly 6 characters');
+    const formattedCode = joinCode.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+    if (formattedCode.length < 3) {
+      toast.error('Event code must be at least 3 characters');
       return;
     }
-    const eventTitle = title.trim() || 'Nexus Tech Event 2025';
+    const eventTitle = title.trim() || 'Nexus Event 2026';
 
-    setIsSubmitting(true);
-
-    // 1. Cross-device API registration (available to both mobile and laptop)
+    // 1. Immediately save to creator's localStorage so it's instantly active locally
     try {
-      await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: formattedCode,
-          title: eventTitle,
-          category,
-          venueName,
-          venueAddress,
-          organizerId: user?.id || 'user-founder-anuj',
-          organizerName: user?.name || 'Organizer',
-          type: 'event',
-        }),
-      });
-    } catch (apiErr) {
-      console.warn('API event registration fallback:', apiErr);
-    }
+      const expiresAt = Date.now() + 4 * 60 * 60 * 1000;
+      const codeMeta = JSON.parse(localStorage.getItem('nexus_created_codes') || '{}');
+      codeMeta[formattedCode] = { createdAt: Date.now(), expiresAt, title: eventTitle };
+      localStorage.setItem('nexus_created_codes', JSON.stringify(codeMeta));
+    } catch {}
 
-    // 2. Supabase DB persistence if configured
+    // 2. Instantly show the generated code and QR view! (0ms UI latency, never hangs)
+    setCreatedEventCode(formattedCode);
+    setIsSubmitting(false);
+    toast.success(`🎉 Event "${eventTitle}" created! Code: ${formattedCode}`);
+
+    // 3. Fast cross-device background registration so other mobile & laptop devices can join
+    fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: formattedCode,
+        title: eventTitle,
+        category,
+        venueName: venueName?.trim() || 'Live Venue',
+        venueAddress: venueAddress?.trim() || '',
+        organizerId: user?.id || 'user-founder-anuj',
+        organizerName: user?.name || 'Organizer',
+        type: 'event',
+      }),
+    }).catch((apiErr) => {
+      console.warn('API event registration notice:', apiErr);
+    });
+
+    // 4. Non-blocking Supabase sync with 800ms race timeout
     if (isSupabaseConfigured) {
       try {
         const supabase = createClient();
-        await supabase
-          .from('events')
-          .insert({
+        Promise.race([
+          supabase.from('events').insert({
             title: eventTitle,
             join_code: formattedCode,
             category,
@@ -104,22 +112,11 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
             venue_address: venueAddress,
             organizer_id: user?.id || 'user-founder-anuj',
             status: 'active',
-          });
-      } catch (err: any) {
-        console.warn('Supabase event save fallback:', err);
-      }
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 800)),
+        ]).catch(() => {});
+      } catch {}
     }
-
-    const expiresAt = Date.now() + 4 * 60 * 60 * 1000;
-    try {
-      const codeMeta = JSON.parse(localStorage.getItem('nexus_created_codes') || '{}');
-      codeMeta[formattedCode] = { createdAt: Date.now(), expiresAt, title: eventTitle };
-      localStorage.setItem('nexus_created_codes', JSON.stringify(codeMeta));
-    } catch {}
-
-    setCreatedEventCode(formattedCode);
-    toast.success(`🎉 Event "${eventTitle}" created! Code: ${formattedCode}`);
-    setIsSubmitting(false);
   };
 
   if (!isOpen) return null;
@@ -158,7 +155,10 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={() => {
+              setIsSubmitting(false);
+              onClose();
+            }}
             className="p-1.5 rounded-full text-slate-400 hover:text-white transition-colors hover:bg-white/[0.06]"
           >
             <X className="h-5 w-5" />
@@ -193,7 +193,7 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
                 shareUrl={shareJoinLink}
               />
 
-              <div className="flex gap-2 pt-2 w-full max-w-sm">
+              <div className="flex flex-col sm:flex-row gap-2 pt-2 w-full max-w-sm">
                 <button
                   type="button"
                   onClick={() => {
@@ -206,6 +206,16 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
                   style={{ background: 'linear-gradient(135deg, #4263EB, #3451D1)', boxShadow: '0 8px 24px rgba(66, 99, 235, 0.25)' }}
                 >
                   Enter Event Room Now →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreatedEventCode(null);
+                    generateRandomCode();
+                  }}
+                  className="py-3 px-4 rounded-2xl text-slate-300 hover:text-white text-xs font-semibold transition-all bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] active:scale-95"
+                >
+                  Create Another
                 </button>
               </div>
             </div>
@@ -230,7 +240,7 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
                 />
               </div>
 
-              {/* 6-Character Custom Code Generator */}
+              {/* Custom Code Generator */}
               <div
                 className="p-4 rounded-2xl space-y-2"
                 style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)' }}
@@ -238,7 +248,7 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-white flex items-center gap-1.5">
                     <Sparkles className="h-3.5 w-3.5" style={{ color: '#4263EB' }} />
-                    6-Character Join Code
+                    Event Join Code
                   </label>
                   <button
                     type="button"
@@ -254,12 +264,12 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
                   <input
                     type="text"
                     required
-                    maxLength={6}
+                    maxLength={8}
                     value={joinCode}
                     onChange={(e) =>
-                      setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))
+                      setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8))
                     }
-                    placeholder="HYD202"
+                    placeholder="MGIT11"
                     className="flex-1 h-12 rounded-xl text-center font-mono text-xl font-bold tracking-[0.2em] uppercase text-white outline-none transition-all"
                     style={{
                       background: 'rgba(255, 255, 255, 0.03)',
@@ -316,8 +326,8 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isSubmitting || joinCode.length !== 6}
-                className="w-full h-13 rounded-2xl text-white font-bold text-xs disabled:opacity-40 transition-all shadow-md flex items-center justify-center gap-2 mt-4 active:scale-95"
+                disabled={isSubmitting || joinCode.trim().length < 3}
+                className="w-full h-13 rounded-2xl text-white font-bold text-xs disabled:opacity-40 transition-all shadow-md flex items-center justify-center gap-2 mt-4 active:scale-95 cursor-pointer"
                 style={{ background: 'linear-gradient(135deg, #4263EB 0%, #3451D1 100%)', boxShadow: '0 8px 24px rgba(66, 99, 235, 0.25)' }}
               >
                 {isSubmitting ? (
